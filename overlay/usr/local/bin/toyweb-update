@@ -1,0 +1,127 @@
+#!/bin/sh
+# ToyMesh website updater. Replaces /srv/toyverse/web from a SIGNED release.
+#
+# Same trust model as toyui-update:
+#   1. fetch manifest.json and manifest.sigs/<signer>.sig
+#   2. at least THRESHOLD independent trusted keys (/etc/toymesh/keys) must have
+#      signed the manifest (Ed25519). One key alone is never enough.
+#   3. only a newer version is installed
+#   4. the archive is checked against the signed SHA-256 and size limit
+#   5. the archive may only contain plain files and folders inside web/
+#      (no absolute paths, no "..", no links, no devices)
+#   6. the new site replaces the old one in one rename, the old one is kept
+#      as backup; if the check afterwards fails, it is rolled back
+#
+# Without configuration (SOURCE empty) the script does nothing.
+# By hand:  toyweb-update            check now
+#           toyweb-update --rollback back to the last backup
+set -eu
+
+ROOT="${TOYWEB_ROOT:-/srv/toyverse}"
+WEB="$ROOT/web"
+CONF="${TOYWEB_CONF:-/etc/toymesh/web-update.conf}"
+KEYDIR="${TOYWEB_KEYDIR:-/etc/toymesh/keys}"
+SIGLIB="${TOYMESH_LIB:-/usr/local/lib/toymesh}/sigcheck.sh"
+BAK="${TOYWEB_BAK:-/var/lib/toymesh/web-backup}"
+KEEP=2
+MAX_BYTES=$((200 * 1024 * 1024))
+
+log() { echo "[toyweb] $*"; logger -t toyweb "$*" 2>/dev/null || true; }
+die() { log "FEHLER: $*"; exit 1; }
+installed_version() { jq -r '.version // "0"' "$WEB/VERSION.json" 2>/dev/null || echo 0; }
+
+if [ "${1:-}" = "--rollback" ]; then
+  last=$(ls -1 "$BAK" 2>/dev/null | sort -V | tail -n1 || true)
+  [ -n "$last" ] || die "keine Sicherung vorhanden"
+  rm -rf "$WEB.old"
+  [ -d "$WEB" ] && mv "$WEB" "$WEB.old"
+  cp -a "$BAK/$last" "$WEB" || { [ -d "$WEB.old" ] && mv "$WEB.old" "$WEB"; die "Rückbau fehlgeschlagen"; }
+  rm -rf "$WEB.old"
+  log "zurückgesetzt auf Sicherung $last"
+  exit 0
+fi
+
+[ -f "$CONF" ] || { log "keine Konfiguration ($CONF) – Webseiten-Updates sind aus"; exit 0; }
+SOURCE=""
+THRESHOLD=2
+# shellcheck disable=SC1090
+. "$CONF"
+case "$THRESHOLD" in ''|*[!0-9]*) die "THRESHOLD ist keine Zahl" ;; esac
+[ "$THRESHOLD" -ge 2 ] || die "THRESHOLD muss mindestens 2 sein (ein Schlüssel allein reicht nie)"
+[ -n "$SOURCE" ] || { log "SOURCE ist leer – Webseiten-Updates sind aus"; exit 0; }
+case "$SOURCE" in
+  https://*) ;;
+  http://127.0.0.1*|http://localhost*) ;;
+  *) die "SOURCE muss https:// sein (http:// nur für 127.0.0.1/localhost)" ;;
+esac
+SOURCE="${SOURCE%/}"
+command -v jq >/dev/null 2>&1 || die "jq fehlt (apk add jq)"
+[ -d "$KEYDIR" ] && [ -f "$SIGLIB" ] || die "Schlüsselordner oder Prüfbibliothek fehlt"
+# shellcheck disable=SC1090
+. "$SIGLIB"
+NKEYS=$(ls -1 "$KEYDIR"/*.pub 2>/dev/null | wc -l)
+[ "$NKEYS" -ge "$THRESHOLD" ] || die "zu wenige vertrauenswürdige Schlüssel ($NKEYS, nötig $THRESHOLD)"
+
+TMP=$(mktemp -d)
+trap 'rm -rf "$TMP"' EXIT
+get() { curl -sfL --max-time 300 --max-filesize "$MAX_BYTES" "$1" -o "$2"; }
+
+get "$SOURCE/manifest.json" "$TMP/manifest.json" || { log "Quelle nicht erreichbar – übersprungen"; exit 0; }
+mkdir -p "$TMP/sigs"
+for pub in "$KEYDIR"/*.pub; do
+  name=$(basename "$pub" .pub)
+  get "$SOURCE/manifest.sigs/$name.sig" "$TMP/sigs/$name.sig" || true
+done
+GOOD=$(count_valid_sigs "$TMP/manifest.json" "$TMP/sigs" "$KEYDIR")
+[ "$GOOD" -ge "$THRESHOLD" ] || die "nur $GOOD gültige Unterschrift(en), nötig $THRESHOLD – Update verworfen"
+log "Manifest von $GOOD Signierern bestätigt (nötig $THRESHOLD)"
+
+NEW=$(jq -r '.version // empty' "$TMP/manifest.json")
+ARCHIVE=$(jq -r '.archive // empty' "$TMP/manifest.json")
+WANT=$(jq -r '.sha256 // empty' "$TMP/manifest.json")
+[ -n "$NEW" ] && [ -n "$ARCHIVE" ] && [ -n "$WANT" ] || die "Manifest unvollständig (version, archive, sha256)"
+case "$ARCHIVE" in */*|*..*|'') die "Archivname nicht erlaubt: $ARCHIVE" ;; esac
+CUR=$(installed_version)
+if [ "$NEW" = "$CUR" ]; then log "bereits aktuell ($CUR)"; exit 0; fi
+TOP=$(printf '%s\n%s\n' "$CUR" "$NEW" | sort -V | tail -n1)
+[ "$TOP" = "$NEW" ] || { log "installiert ist neuer ($CUR), Update $NEW wird ignoriert"; exit 0; }
+
+get "$SOURCE/$ARCHIVE" "$TMP/site.tar.gz" || die "Download fehlgeschlagen: $ARCHIVE"
+GOT=$(sha256sum "$TMP/site.tar.gz" | awk '{print $1}')
+[ "$GOT" = "$WANT" ] || die "Prüfsumme falsch – Update verworfen"
+
+# Inhalt prüfen, bevor etwas ausgepackt wird
+tar -tzf "$TMP/site.tar.gz" > "$TMP/list" || die "Archiv nicht lesbar"
+if grep -Eq '^/|(^|/)\.\.(/|$)' "$TMP/list"; then die "Archiv enthält unerlaubte Pfade"; fi
+if tar -tvzf "$TMP/site.tar.gz" | grep -Eq '^[^-d]'; then die "Archiv enthält Links oder Sonderdateien"; fi
+
+STAGE="$ROOT/.web-new"
+rm -rf "$STAGE"
+mkdir -p "$STAGE"
+tar -xzf "$TMP/site.tar.gz" -C "$STAGE" || { rm -rf "$STAGE"; die "Auspacken fehlgeschlagen"; }
+[ -f "$STAGE/index.html" ] && [ -f "$STAGE/de/index.html" ] || { rm -rf "$STAGE"; die "Archiv ohne Startseite"; }
+jq --arg v "$NEW" '.version = $v' "$TMP/manifest.json" > "$STAGE/VERSION.json"
+find "$STAGE" -type d -exec chmod 0755 {} + && find "$STAGE" -type f -exec chmod 0644 {} +
+
+# Alte Seite sichern, neue in einem Schritt einsetzen
+mkdir -p "$BAK"
+if [ -d "$WEB" ]; then
+  rm -rf "$BAK/$CUR"
+  cp -a "$WEB" "$BAK/$CUR"
+  rm -rf "$WEB.old"
+  mv "$WEB" "$WEB.old"
+fi
+mv "$STAGE" "$WEB"
+rm -rf "$WEB.old"
+
+# Gegenprobe
+if [ ! -f "$WEB/de/index.html" ] || [ "$(installed_version)" != "$NEW" ]; then
+  log "Gegenprobe fehlgeschlagen – Rückbau"
+  rm -rf "$WEB"
+  [ -d "$BAK/$CUR" ] && cp -a "$BAK/$CUR" "$WEB"
+  die "Update $NEW zurückgenommen"
+fi
+
+ls -1 "$BAK" | sort -V | awk -v k="$KEEP" '{a[NR]=$0} END{for(i=1;i<=NR-k;i++) print a[i]}' \
+  | while read -r old; do rm -rf "$BAK/$old"; done
+log "Webseite aktualisiert: $CUR -> $NEW"

@@ -14,7 +14,14 @@ cp -a "$OVERLAY/." /
 echo "==> fixing modes"
 chmod 0755 /etc/init.d/toyverse-web /etc/init.d/toyverse-kiosk
 chmod 0755 /usr/local/bin/toyverse-update /usr/local/bin/toyverse-app-sync /usr/local/bin/toysurf /usr/local/bin/toyui-update /usr/local/bin/toysafe-check /usr/local/bin/toysafe-warn /etc/periodic/daily/toysafe-warn-update
-chmod 0644 /etc/toymesh/ui-update.conf
+chmod 0644 /etc/toymesh/ui-update.conf /etc/toymesh/web-update.conf
+chmod 0755 /usr/local/bin/toyweb-update
+mkdir -p /var/lib/toymesh/web-backup
+if [ ! -f /srv/toyverse/web/de/index.html ]; then
+    echo "!!  ToyVerse website missing in /srv/toyverse/web."
+    echo "    On the PC run: bash scripts/fetch-website.sh, then run this installer again."
+    echo "    Until then the ToyVerse entries in the launcher show an empty page."
+fi
 chmod 0755 /usr/local/bin/toymesh-profil /etc/init.d/toymesh-profil /etc/periodic/hourly/toymesh-profil
 chmod -R a+rX /usr/local/lib/toyverse_diagnose
 mkdir -p /etc/toymesh/keys /usr/local/lib/toymesh && chmod 0755 /etc/toymesh/keys /usr/local/lib/toymesh

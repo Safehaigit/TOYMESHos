@@ -48,3 +48,18 @@ and against this device. Facts below come from grepping the actual files.
   usable once loaded. The lightweight `cog` browser is the right host for it;
   avoid running it alongside many other apps.
 - The ToyVerse site is light and will feel snappy.
+
+## Update 26.10.2026: Webseite aus dem echten Build
+- Die alte Einzeldatei `apps/toyverse-website.html` ist entfernt. Sie war eine veraltete
+  Kopie und versprach noch Bridge, EVM, „TOYPAY auf Polygon“ und ToyCash auf der Kette
+  (Widerspruch zu den Entscheidungen 36, 61, 63, 123 in TOYfoundation/toycoin).
+- Stattdessen baut `scripts/fetch-website.sh` die Webseite aus `TOYfoundation/ToyVerse-web`
+  für den Pfad `/web/` (alle übersetzten Sprachen, Schriften selbst gehostet, keine Anfragen
+  an Dritte, alle internen Links geprüft). Launcher und ToySearch zeigen auf `web/de/…`.
+- Auf dem Gerät hält `toyweb-update` die Seite aktuell, nur mit mindestens 2 gültigen
+  Unterschriften, geprüfter Prüfsumme und einem Archiv ohne Links oder Pfade nach außen.
+  Rückbau mit `toyweb-update --rollback`.
+- Geprüft: Installation, „bereits aktuell“, neues Release, Rückbau, reproduzierbares Archiv,
+  und abgewiesen: eine Unterschrift, verändertes Archiv, `../`-Pfad, absoluter Pfad, Link,
+  Archivname mit Pfad. Im Browser: ToyVerse, TOYPAY und ToyCash öffnen im Launcher, alle
+  Links der Suche antworten mit 200.

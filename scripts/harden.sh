@@ -83,6 +83,7 @@ mkdir -p /etc/periodic/weekly /etc/periodic/daily
 ln -sf /usr/local/bin/toyverse-update   /etc/periodic/weekly/toyverse-update
 ln -sf /usr/local/bin/toyverse-app-sync /etc/periodic/daily/toyverse-app-sync
 ln -sf /usr/local/bin/toyui-update /etc/periodic/daily/toyui-update
+ln -sf /usr/local/bin/toyweb-update /etc/periodic/daily/toyweb-update
 ln -sf /usr/local/bin/toysafe-check /etc/periodic/daily/toysafe-check
 # toysafe-warn-update ist bereits im Overlay (aktualisiert die Warnliste täglich)
 rc-update add crond default 2>/dev/null || true
