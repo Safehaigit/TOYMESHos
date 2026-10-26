@@ -1,0 +1,4 @@
+#!/bin/sh
+# Hourly re-evaluation: one strained hour steps the profile down,
+# five calm hours in a row step it back up (never above the hardware class).
+/usr/local/bin/toymesh-profil >/var/log/toymesh-profil.log 2>&1 || true

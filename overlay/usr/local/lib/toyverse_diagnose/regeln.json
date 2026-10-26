@@ -1,0 +1,263 @@
+{
+  "schema": "toyverse-diagnose-regeln/1",
+  "_hinweis": "Regeln für die Ökosystem-Diagnose. Jede Regel nennt die Entscheidung, auf die sie sich stützt. Neue Regeln hier ergänzen, nicht im Code.",
+  "repos": {
+    "toycoin": {
+      "rolle": "Quelle der Wahrheit: Spezifikation, Entscheidungen, Knoten, feste Werte",
+      "github": "TOYfoundation/toycoin"
+    },
+    "toypost": {
+      "rolle": "Korrespondenz, Rechnungen, Mitteilungen",
+      "github": "TOYfoundation/Toypost"
+    },
+    "toyverse-web": {
+      "rolle": "Webseite für Community und Presse",
+      "github": "TOYfoundation/ToyVerse-web"
+    },
+    "toysafe": {
+      "rolle": "Sicherheits-Cockpit",
+      "github": "TOYfoundation/ToySafe"
+    },
+    "toymeshos": {
+      "rolle": "Betriebssystem ToyMesh",
+      "github": "Safehaigit/TOYMESHos"
+    }
+  },
+  "ignorieren": [
+    ".git/**",
+    "**/node_modules/**",
+    "**/package-lock.json",
+    "**/Cargo.lock",
+    "**/target/**",
+    "**/dist/**",
+    "**/.venv/**",
+    "**/*.png",
+    "**/*.jpg",
+    "**/*.webp",
+    "**/*.woff2",
+    "**/*.ttf",
+    "**/*.pdf"
+  ],
+  "produkte": {
+    "ToyChain": "ToyChain",
+    "TOY": "\\bTOY\\b|ToyCoin",
+    "TOYPAY": "TOYPAY",
+    "ToyScan": "ToyScan",
+    "ToyCash": "ToyCash",
+    "TOYQUEST": "TOYQUEST",
+    "ToyPost": "ToyPost",
+    "ToySafe": "ToySafe",
+    "ToyMesh": "ToyMesh|TOYMESH",
+    "ToySurf": "ToySurf",
+    "ToySearch": "ToySearch",
+    "ToyChat": "ToyChat"
+  },
+  "register": [
+    {
+      "name": "Überblick im Entscheidungs-Repo",
+      "repo": "toycoin",
+      "datei": "docs/spaeter/11-toyverse.md"
+    },
+    {
+      "name": "Webseite (deutsche Texte)",
+      "repo": "toyverse-web",
+      "datei": "src/i18n/locales/de.json"
+    },
+    {
+      "name": "App-Liste in ToyMesh",
+      "repo": "toymeshos",
+      "datei": "overlay/srv/toyverse/apps.json"
+    }
+  ],
+  "muster": [
+    {
+      "id": "E01",
+      "titel": "Veralteter Repository-Name",
+      "stufe": "gelb",
+      "entscheidung": "Umzug nach TOYfoundation",
+      "warum": "Die Repositories liegen inzwischen unter TOYfoundation. Verweise auf Safehaigit funktionieren nur über eine Weiterleitung, die bei einem neuen Repo gleichen Namens bricht. Abgleich-Workflows und Lese-Schlüssel hängen daran.",
+      "regex": "Safehaigit/(toycoin|Toypost|toypost|ToyVerse-web|toyverse-web|ToySafe|toysafe)\\b",
+      "dateien": [
+        "**/*"
+      ],
+      "ohne": [
+        "**/verlauf.json",
+        "**/regeln.json"
+      ],
+      "korrektur": {
+        "ersetze": {
+          "Safehaigit/toycoin": "TOYfoundation/toycoin",
+          "Safehaigit/Toypost": "TOYfoundation/Toypost",
+          "Safehaigit/toypost": "TOYfoundation/Toypost",
+          "Safehaigit/ToyVerse-web": "TOYfoundation/ToyVerse-web",
+          "Safehaigit/toyverse-web": "TOYfoundation/ToyVerse-web",
+          "Safehaigit/ToySafe": "TOYfoundation/ToySafe",
+          "Safehaigit/toysafe": "TOYfoundation/ToySafe"
+        }
+      }
+    },
+    {
+      "id": "E02",
+      "titel": "ToyChain als EVM-kompatibel beschrieben",
+      "stufe": "rot",
+      "entscheidung": "Nr. 36",
+      "warum": "Auf der ToyChain gibt es nie EVM-Ausführung. Kompatibel sind nur Adressen, Signaturen und JSON-RPC. Wer EVM liest, erwartet Smart Contracts.",
+      "regex": "EVM[- ]kompatibel|EVM[- ]compatible",
+      "dateien": [
+        "**/apps.json",
+        "**/locales/*.json",
+        "**/content/**/*.json",
+        "**/srv/toyverse/**/*.html",
+        "**/srv/toyverse/**/*.js",
+        "**/src/**/*.tsx",
+        "**/src/**/*.ts",
+        "**/*.md"
+      ],
+      "ohne": [
+        "docs/02-entscheidungen.md",
+        "docs/spaeter/**",
+        "docs/1*-pruefbericht*.md",
+        "docs/01-spezifikation.md"
+      ],
+      "vorschlag": "Formulierung: „Adressen und Signaturen wie bei Ethereum, MetaMask-tauglich, ohne Smart Contracts“."
+    },
+    {
+      "id": "E03",
+      "titel": "TOYPAY als Polygon-Wallet für alte ToyCoin-Token beschrieben",
+      "stufe": "rot",
+      "entscheidung": "Nr. 61, 63",
+      "warum": "TOYPAY ist die Wallet und der Knoten der ToyChain. Die alten ToyCoin-Token auf Polygon und Ethereum werden ignoriert und sind nicht eintauschbar.",
+      "regex": "(TOYPAY|Wallet)[^\\n\"]{0,40}ToyCoin auf Polygon|Wallet für ToyCoin auf Polygon",
+      "dateien": [
+        "**/apps.json",
+        "**/locales/*.json",
+        "**/srv/toyverse/**/*.html",
+        "**/content/**/*.json"
+      ],
+      "vorschlag": "„Wallet und Knoten für TOY auf der ToyChain, zeigt dieselbe Adresse auch auf Polygon und Ethereum.“"
+    },
+    {
+      "id": "E04",
+      "titel": "ToyCash als Token auf der ToyChain beschrieben",
+      "stufe": "rot",
+      "entscheidung": "Nr. 36, 123",
+      "warum": "ToyCash-Notes liegen außerhalb der Kette. Die ToyChain speichert nur Anker (Hashes), kein zweites Asset.",
+      "regex": "Stablecoin auf der ToyChain|ToyCash[^\\n\"]{0,30}auf der ToyChain",
+      "dateien": [
+        "**/apps.json",
+        "**/locales/*.json",
+        "**/srv/toyverse/**/*.html",
+        "**/content/**/*.json"
+      ],
+      "vorschlag": "„Euro-Stablecoin außerhalb der Kette, die ToyChain bezeugt nur Hashes.“"
+    },
+    {
+      "id": "E05",
+      "titel": "Reserve oder Premint erwähnt",
+      "stufe": "rot",
+      "entscheidung": "Nr. 62",
+      "warum": "Totaler Fair Launch: Genesis ohne Guthaben, keine Reserve.",
+      "regex": "(?<!kein )(?<!keine )(?<!ohne )(?<!no )(1\\s?%[- ]?[Rr]eserve|Team-Reserve|Premint)",
+      "dateien": [
+        "**/apps.json",
+        "**/locales/*.json",
+        "**/srv/toyverse/**/*.html",
+        "**/content/**/*.json",
+        "**/src/**/*.ts",
+        "**/src/**/*.tsx"
+      ],
+      "ohne": [
+        "**/*.test.*",
+        "**/test/**"
+      ]
+    },
+    {
+      "id": "E06",
+      "titel": "Bridge-Versprechen",
+      "stufe": "rot",
+      "entscheidung": "Nr. 63",
+      "warum": "Es gibt keine Bridge im jetzigen Umfang. Ein Tausch-Versprechen wäre eine Falle für Nutzer.",
+      "regex": "(?<!keine )(?<!kein )(?<!no )(1:1[- ]Bridge|Bridge 1:1|bridge your)",
+      "dateien": [
+        "**/apps.json",
+        "**/locales/*.json",
+        "**/srv/toyverse/**/*.html",
+        "**/content/**/*.json"
+      ]
+    },
+    {
+      "id": "E07",
+      "titel": "Inhalte von fremden Servern",
+      "stufe": "gelb",
+      "entscheidung": "Nr. 108, 133",
+      "warum": "Apps sollen offline laufen und keine Anfragen an Dritte senden (Datenschutz, ToyMesh ohne Netz).",
+      "regex": "https?://(fonts\\.googleapis\\.com|fonts\\.gstatic\\.com|cdn\\.jsdelivr\\.net|unpkg\\.com|cdnjs\\.cloudflare\\.com|ajax\\.googleapis\\.com)",
+      "dateien": [
+        "**/*.html",
+        "**/*.css",
+        "**/*.astro",
+        "**/*.tsx",
+        "**/*.js"
+      ],
+      "ohne": [
+        "**/docs/**",
+        "**/*.md",
+        "**/policies.json",
+        "**/user.js"
+      ]
+    },
+    {
+      "id": "E08",
+      "titel": "TOY-Betrag als Fließkomma",
+      "stufe": "rot",
+      "entscheidung": "Spezifikation, 15-verknuepfung Abschnitt 3",
+      "warum": "Beträge bis 10^26 passen nicht in Fließkomma. Rundungsfehler bei Geld.",
+      "regex": "(parseFloat|Number)\\([^)]{0,40}(amount|betrag|Betrag|units|wei)",
+      "dateien": [
+        "**/*.ts",
+        "**/*.tsx",
+        "**/*.js",
+        "**/*.mjs"
+      ],
+      "ohne": [
+        "**/*.test.*",
+        "**/test/**",
+        "**/tests/**",
+        "**/demo.*",
+        "**/demo/**"
+      ]
+    },
+    {
+      "id": "E09",
+      "titel": "Möglicher privater Schlüssel im Repository",
+      "stufe": "rot",
+      "entscheidung": "SECURITY.md, Nr. 32",
+      "warum": "Schlüssel gehören nie ins Repository.",
+      "regex": "-----BEGIN (EC |RSA |OPENSSH )?PRIVATE KEY-----|(private_?key|privkey|PRIVATE_KEY|mnemonic)\\s*[:=]\\s*[\"']?(0x)?[0-9a-fA-F]{64}",
+      "dateien": [
+        "**/*"
+      ],
+      "ohne": [
+        "**/*.md",
+        "**/tests/**",
+        "**/test/**",
+        "**/fuzz/**",
+        "**/*.test.*"
+      ]
+    },
+    {
+      "id": "E10",
+      "titel": "Stufen nach Tokenomics v0.3",
+      "stufe": "info",
+      "entscheidung": "Nr. 138, 142 (v0.4)",
+      "warum": "Seit Tokenomics v0.4 gelten die Stufen 1 / 5 / 10 / 25 / 50 / 75 / 100 TOY. Code und toyverse.json folgen erst mit M3b, Oberflächen danach über den Abgleich. Nur zur Erinnerung.",
+      "regex": "10 / 100 / 1[.,]000 TOY|10, 100 (und|and) 1[.,]000 TOY",
+      "dateien": [
+        "**/locales/*.json",
+        "**/srv/toyverse/**/*.html",
+        "**/content/**/*.json",
+        "**/src/**/*.ts"
+      ]
+    }
+  ]
+}

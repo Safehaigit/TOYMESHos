@@ -63,7 +63,10 @@
   function ico(a, cls) {
     return n("button", { cls: "ico " + (cls || ""), attr: { type: "button", title: a.name },
       on: { click: function () { openApp(a); } } },
-      [n("span", { cls: "ico-g", t: initials(a.name) }), n("span", { cls: "ico-l", t: a.name })]);
+      [a.icon
+        ? n("span", { cls: "ico-g ico-img" }, [n("img", { attr: { src: a.icon, alt: "", width: "64", height: "64", decoding: "async" } })])
+        : n("span", { cls: "ico-g", t: initials(a.name) }),
+       n("span", { cls: "ico-l", t: a.name })]);
   }
 
   // Kürzel aus dem Namen ohne "Toy": ToySafe -> SA, ToyVerse -> VE, ToySearch -> SE, TOYPAY -> PA
@@ -74,6 +77,15 @@
 
   // ---------- App-Fenster (gemeinsam für alle Oberflächen) ----------
   function openApp(a) {
+    // type "desk": App ist in ToyDesk eingebaut (z. B. ToyPost). Wechselt für
+    // diese Sitzung zu ToyDesk und öffnet die Ansicht, ohne die Wahl zu speichern.
+    if (a.type === "desk") {
+      S.deskView = a.entry;
+      S.ui = "toydesk";
+      $("uisel").value = S.ui;
+      render();
+      return;
+    }
     $("win-t").textContent = a.name + " · " + (LBL[a.status] || "");
     S.recent = [a].concat(S.recent.filter(function (x) { return x.id !== a.id; })).slice(0, 6);
     $("win-f").src = a.entry;
@@ -189,8 +201,11 @@
   // ToyTiles: große Kacheln
   L.tiles = function (root, apps) {
     root.appendChild(n("div", { cls: "tgrid" }, apps.map(function (a, i) {
-      return n("button", { cls: "tile t" + (i % 6), on: { click: function () { openApp(a); } } },
-        [n("b", { t: a.name }), n("small", { t: LBL[a.status] || "" })]);
+      var t = n("button", { cls: "tile t" + (i % 6) + (a.icon ? " tile-ico" : ""), on: { click: function () { openApp(a); } } },
+        [a.icon ? n("img", { attr: { src: a.icon, alt: "", width: "56", height: "56", decoding: "async" } }) : null,
+         n("b", { t: a.name }), n("small", { t: LBL[a.status] || "" })]);
+      if (a.color && /^#[0-9A-Fa-f]{6}$/.test(a.color)) t.style.background = a.color;
+      return t;
     }).concat([n("button", { cls: "tile t0", on: { click: openWizard } }, [n("b", { t: "Assistent" }), n("small", { t: "Einrichtung" })])])));
   };
 
@@ -303,7 +318,8 @@
   // ToyDesk: Arbeitsoberfläche mit Seitenleiste. Aufgaben und Notizen sind lokal gespeichert.
   L.desk = function (root, apps) {
     var NAV = [["start", "Start"], ["tasks", "Aufgaben"], ["notes", "Notizen"], ["post", "ToyPost"], ["apps", "Apps"]];
-    var view = "start";
+    var view = S.deskView || "start";
+    S.deskView = null;
     var nav = n("nav", { cls: "dsk-nav" });
     var main = n("main", { cls: "dsk-main" });
 
@@ -678,6 +694,25 @@
     if (e.key === "/" && S.search && document.activeElement.tagName !== "INPUT") { e.preventDefault(); S.search.focus(); }
   });
 
+  // Geräte-Profil von toymesh-profil (/srv/toyverse/geraet.json): schaltet
+  // Animationen und Glas-Effekte passend zur Hardware. Eine selbst gewählte
+  // Oberfläche hat immer Vorrang, das Profil gibt nur den Start vor.
+  function applyProfile(p) {
+    if (!p || !p.profil) return;
+    var pr = p.profil;
+    document.body.setAttribute("data-anim", pr.animationen || "normal");
+    document.body.setAttribute("data-glass", pr.glas_effekte ? "1" : "0");
+    document.body.setAttribute("data-klasse", pr.klasse || "");
+    S.profile = pr;
+    if (!get(KEY_UI, "") && pr.oberflaeche && def(pr.oberflaeche).id === pr.oberflaeche) {
+      // nicht speichern: das Profil darf sich mit der Hardware weiter anpassen
+      S.ui = pr.oberflaeche;
+      var sel = $("uisel");
+      if (sel) sel.value = pr.oberflaeche;
+      if (S.apps.length) render();
+    }
+  }
+
   function init() {
     var saved = get(KEY_UI, "toyclassic");
     S.ui = def(saved).id;
@@ -697,6 +732,11 @@
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (m) { if (m && m.version) $("uiver").textContent = "v" + m.version; })
       .catch(function () { /* ohne Version weiter */ });
+
+    fetch("geraet.json", { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(applyProfile)
+      .catch(function () { /* ohne Profil: Standard */ });
 
     fetch("apps.json", { cache: "no-store" })
       .then(function (r) { if (!r.ok) throw new Error("http " + r.status); return r.json(); })

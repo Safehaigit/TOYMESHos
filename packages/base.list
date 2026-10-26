@@ -18,6 +18,7 @@ chrony                         # time sync (keeps TLS + crypto timestamps correc
 e2fsprogs
 dosfstools
 util-linux
+python3                        # runs toymesh-profil (device diagnosis, stdlib only)
 htop
 nano
 less

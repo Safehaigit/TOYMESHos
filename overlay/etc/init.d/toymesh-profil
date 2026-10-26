@@ -1,0 +1,18 @@
+#!/sbin/openrc-run
+# Classifies the device once per boot, before the launcher starts, so the
+# first screen already uses the right UI and effects.
+# Enable:  rc-update add toymesh-profil boot
+
+name="toymesh-profil"
+description="ToyMesh device profile (hardware class, UI and app modes)"
+
+depend() {
+    need localmount
+    before toyverse-web toyverse-kiosk
+}
+
+start() {
+    ebegin "Classifying device for ToyMesh"
+    /usr/local/bin/toymesh-profil >/var/log/toymesh-profil.log 2>&1
+    eend 0
+}
