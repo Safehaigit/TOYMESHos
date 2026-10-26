@@ -1,0 +1,12 @@
+#!/bin/sh
+# ToyMesh device profile: classify this device (K1 Minimal to K4 Stark), pick UI,
+# browser, ToyChain stage and app modes, and adapt over time from memory
+# pressure, OOM kills and temperature. Reads only, changes no system setting.
+#
+#   toymesh-profil          short report, writes /srv/toyverse/geraet.json
+#   toymesh-profil --json   full JSON
+#
+# The launcher reads geraet.json at start. State: /var/lib/toymesh/profil-zustand.json
+set -eu
+export PYTHONPATH=/usr/local/lib
+exec python3 -I -c 'import sys; sys.path.insert(0, "/usr/local/lib"); from toyverse_diagnose.cli import main; sys.exit(main(["geraet"] + sys.argv[1:]))' "$@"

@@ -1,5 +1,5 @@
 {
-  "_comment": "ToyVerse app manifest. The launcher reads this; toyverse-app-sync updates apps that have a non-empty 'source'. type: local=real html file here | section=deep-link into the website | remote=pull from source.",
+  "_comment": "ToyVerse app manifest. The launcher reads this; toyverse-app-sync updates apps that have a non-empty 'source'. type: local=real html file here | section=deep-link into the website | remote=pull from source | desk=built into ToyDesk, entry is the ToyDesk view. icon: path to the app icon (ToyVerse design system, small variant); without it the launcher shows two letters. color: tile colour from the design system, white text reaches 4.5:1.",
   "updated": "2026-10-26",
   "apps": [
     {
@@ -9,7 +9,9 @@
       "type": "local",
       "entry": "apps/toysafe-cockpit.html",
       "desc": "Supply- & Wallet-Dashboard, Anti-Scam-Training, Live-Prüfung der Ökonomie.",
-      "source": ""
+      "source": "",
+      "icon": "icons/toysafe.svg",
+      "color": "#AF351D"
     },
     {
       "id": "toyverse",
@@ -17,8 +19,10 @@
       "status": "live",
       "type": "local",
       "entry": "apps/toyverse-website.html",
-      "desc": "Das Ökosystem im Überblick: alle fünf Bausteine unter einem Dach.",
-      "source": ""
+      "desc": "Das Ökosystem im Überblick: ToyChain, TOYPAY, ToyScan, ToyCash, TOYQUEST, ToyPost, ToySafe und ToyMesh.",
+      "source": "",
+      "icon": "icons/toyverse.svg",
+      "color": "#6B1DAF"
     },
     {
       "id": "toysearch",
@@ -27,7 +31,20 @@
       "type": "local",
       "entry": "toysearch/index.html",
       "desc": "Privacy-Suche: offline über deine ToyVerse-Inhalte + datensparsame Web-Suche. Standardmaschine in ToySurf.",
-      "source": ""
+      "source": "",
+      "icon": "icons/toysearch.svg",
+      "color": "#A31DAF"
+    },
+    {
+      "id": "toypost",
+      "name": "ToyPost",
+      "status": "live",
+      "type": "desk",
+      "entry": "post",
+      "desc": "Posteingang für alle Kanäle, TOY-Rechnungen, Betrugsschutz und Mitteilungen in 45 Sprachen. In ToyDesk eingebaut.",
+      "source": "",
+      "icon": "icons/toypost.svg",
+      "color": "#1D4EAF"
     },
     {
       "id": "toypay",
@@ -35,8 +52,10 @@
       "status": "dev",
       "type": "section",
       "entry": "apps/toyverse-website.html#toypay",
-      "desc": "Wallet für ToyCoin auf Polygon. Senden, empfangen, offline zahlen, Händler-Kasse.",
-      "source": ""
+      "desc": "Wallet und Knoten der ToyChain: TOY senden und empfangen, Kassen-Modus, Konto-Schutz. Zeigt dieselbe Adresse auch auf anderen Ketten.",
+      "source": "",
+      "icon": "icons/toypay.svg",
+      "color": "#1C7BAB"
     },
     {
       "id": "toyquest",
@@ -45,7 +64,9 @@
       "type": "section",
       "entry": "apps/toyverse-website.html#toyquest",
       "desc": "Das Spiel im Stil von 1001 Nacht — erklärt dir die ToyChain-Technik spielerisch.",
-      "source": ""
+      "source": "",
+      "icon": "icons/toyquest.svg",
+      "color": "#8C6F17"
     },
     {
       "id": "toychain",
@@ -53,8 +74,10 @@
       "status": "planned",
       "type": "section",
       "entry": "apps/toyverse-website.html#toychain",
-      "desc": "Schlanke Blockchain (< 256 MB), EVM-kompatibel, läuft auf alten Geräten wie diesem.",
-      "source": ""
+      "desc": "Schlanke Blockchain (unter 256 MB) nur mit dem Coin TOY. Adressen wie bei Ethereum, läuft auf alten Geräten wie diesem.",
+      "source": "",
+      "icon": "icons/toychain.svg",
+      "color": "#157F7F"
     },
     {
       "id": "toycash",
@@ -62,8 +85,10 @@
       "status": "concept",
       "type": "section",
       "entry": "apps/toyverse-website.html#toycash",
-      "desc": "Privates Euro-Bargeld, auch offline. Verschlüsselte Beträge, Stablecoin auf der ToyChain.",
-      "source": ""
+      "desc": "Euro-gedecktes digitales Bargeld außerhalb der Kette, auch offline. Die ToyChain bezeugt nur Hashes.",
+      "source": "",
+      "icon": "icons/toycash.svg",
+      "color": "#AF1D8B"
     },
     {
       "id": "toyscan",
@@ -72,7 +97,9 @@
       "type": "section",
       "entry": "apps/toyverse-website.html#toyscan",
       "desc": "Block-Explorer mit Live-Prüfung der Supply. Grünes Licht, wenn alle Kriterien stimmen.",
-      "source": ""
+      "source": "",
+      "icon": "icons/toyscan.svg",
+      "color": "#15844D"
     },
     {
       "id": "toychat",
@@ -81,7 +108,9 @@
       "type": "local",
       "entry": "toychat/index.html",
       "desc": "Verschlüsselter Teamchat mit Kanälen, Aufgaben (wie Slack) und Videoanrufen. Ende-zu-Ende, signierte Nachrichten.",
-      "source": ""
+      "source": "",
+      "icon": "icons/toychat.svg",
+      "color": "#AF1D4E"
     }
   ]
 }
