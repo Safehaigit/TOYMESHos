@@ -4,8 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ToyMesh</title>
+<link rel="icon" href="data:,">
 <link rel="stylesheet" href="fonts/fonts.css">
 <link rel="stylesheet" href="ui/themes.css">
+<link rel="stylesheet" href="ui/assist.css">
 </head>
 <body data-ui="toyclassic">
 <div id="app">
@@ -14,6 +16,7 @@
     <label class="hdr-sel"><span>Oberfläche</span>
       <select id="uisel" aria-label="Oberfläche wählen"></select>
     </label>
+    <button id="biosbtn" class="hdr-btn" type="button" title="Einstellungen öffnen (Strg+Umschalt+B)">BIOS</button>
     <button id="wizbtn" class="hdr-btn" type="button">Assistent</button>
   </header>
   <main id="root" role="main"></main>
@@ -32,6 +35,9 @@
 </div>
 
 <script src="ui/toypost.js"></script>
+<script src="ui/prefs.js"></script>
+<script src="ui/openers.js"></script>
+<script src="ui/assist.js"></script>
 <script src="ui/shell.js"></script>
 </body>
 </html>

@@ -31,7 +31,7 @@
   ];
 
   var S = { apps: [], ui: "toyclassic", privacy: "streng", search: null, recent: [] };
-  var W = { i: 0, steps: ["Willkommen", "Oberfläche", "Datenschutz", "Fertig"] };
+  var W = { i: 0, steps: ["Willkommen", "Oberfläche", "Datenschutz", "Begrüßung", "Fertig"] };
 
   // ---------- Hilfsfunktionen ----------
   function get(k, d) { try { var v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } }
@@ -81,6 +81,9 @@
     $("win-x").focus();
   }
   function closeWin() { $("win").hidden = true; $("win-f").src = "about:blank"; }
+
+  // ToyBIOS: Einstellungsseite im App-Fenster (gleiche Herkunft, teilt localStorage)
+  function openBios() { openApp({ name: "ToyBIOS", entry: "bios/index.html", status: "live" }); }
 
   // ---------- Layouts: je eine Funktion, die in #root rendert ----------
   var L = {};
@@ -621,13 +624,20 @@
   }
 
   // ---------- Einrichtungs-Assistent ----------
-  function openWizard() { W.i = 0; $("wiz").hidden = false; showWiz(); }
+  // Setup-Assistent: neue Fassung (ui/assist.js) mit zwei Tonlagen, sonst die einfache Fassung unten
+  function openWizard() {
+    if (window.ToyAssist) {
+      window.ToyAssist.open({ onUi: setUI, onDone: function () { set(KEY_DONE, "1"); } });
+      return;
+    }
+    W.i = 0; $("wiz").hidden = false; showWiz();
+  }
   function closeWiz() { $("wiz").hidden = true; }
 
   function showWiz() {
     var box = $("wiz-b");
     box.textContent = "";
-    box.appendChild(n("p", { cls: "wstep", t: "Schritt " + (W.i + 1) + " von 4 · " + W.steps[W.i] }));
+    box.appendChild(n("p", { cls: "wstep", t: "Schritt " + (W.i + 1) + " von " + W.steps.length + " · " + W.steps[W.i] }));
 
     if (W.i === 0) {
       box.appendChild(n("p", { t: "Willkommen bei ToyMesh. In wenigen Schritten wählst du Oberfläche und Datenschutz. Alles lässt sich später ändern." }));
@@ -658,7 +668,16 @@
     }
 
     if (W.i === 3) {
+      if (window.ToyOpeners) {
+        window.ToyOpeners.panel(box, n);
+      } else {
+        box.appendChild(n("p", { cls: "hint", t: "Die Begrüßung ist auf diesem Gerät nicht verfügbar." }));
+      }
+    }
+
+    if (W.i === 4) {
       box.appendChild(n("p", { t: "Fertig. Oberfläche: " + def(S.ui).name + " · Datenschutz: " + S.privacy + "." }));
+      box.appendChild(n("p", { cls: "hint", t: "Alle Einstellungen findest du später im BIOS: Schaltfläche BIOS oben oder Strg + Umschalt + B." }));
     }
 
     var back = n("button", { t: "Zurück", on: { click: function () { W.i--; showWiz(); } } });
@@ -674,6 +693,7 @@
   // ---------- Start ----------
   document.addEventListener("keydown", function (e) {
     if (e.key === "Escape") { closeWin(); closeWiz(); }
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "b") { e.preventDefault(); openBios(); }
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k" && S.search) { e.preventDefault(); S.search.focus(); }
     if (e.key === "/" && S.search && document.activeElement.tagName !== "INPUT") { e.preventDefault(); S.search.focus(); }
   });
@@ -689,6 +709,7 @@
     sel.addEventListener("change", function () { setUI(sel.value); });
 
     $("wizbtn").addEventListener("click", openWizard);
+    $("biosbtn").addEventListener("click", openBios);
     $("win-x").addEventListener("click", closeWin);
     $("wiz-x").addEventListener("click", closeWiz);
 
@@ -704,7 +725,10 @@
       .catch(function () { S.apps = []; })
       .then(function () {
         render();
-        if (!get(KEY_DONE, "")) openWizard();
+        // Begrüßung zuerst, danach ggf. der Einrichtungs-Assistent
+        var afterOpener = function () { if (!get(KEY_DONE, "")) openWizard(); };
+        if (window.ToyOpeners) window.ToyOpeners.play({}, afterOpener);
+        else afterOpener();
       });
   }
 

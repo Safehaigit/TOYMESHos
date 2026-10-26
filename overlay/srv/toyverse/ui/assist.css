@@ -1,0 +1,83 @@
+/* ToyMesh-Setup-Assistent: zwei Tonlagen (lustig, seriös), je Oberfläche eigene Farben und Figur.
+ * Keine externen Schriften. Farben als Variablen je data-ui, Bewegung entfällt bei reduzierter Bewegung. */
+.as-ov { position: fixed; inset: 0; z-index: 1500; background: rgba(4, 6, 14, .72); display: flex; align-items: center; justify-content: center; padding: 14px; box-sizing: border-box; font: 15px/1.5 system-ui, sans-serif; color: #eef2fb; }
+.as-ov[hidden] { display: none; }
+.as { --acc: #3b82f6; --acc2: #94a3b8; --bg: #111827; --card: #1a2338; --line: #2c3a5c; width: min(560px, 100%); max-height: 100%; overflow: auto; background: var(--bg); border: 1px solid var(--line); border-top: 4px solid var(--acc); border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,.5); box-sizing: border-box; }
+.as[data-ui="toyclassic"] { --acc: #3b82f6; --acc2: #94a3b8; --bg: #0f1a2e; }
+.as[data-ui="toyaqua"]    { --acc: #22d3ee; --acc2: #7dd3fc; --bg: #0b1f2b; }
+.as[data-ui="toyquest"]   { --acc: #9b5cff; --acc2: #d4af37; --bg: #161028; }
+.as[data-ui="toyplasma"]  { --acc: #ff4fd8; --acc2: #7c3aed; --bg: #1a0f22; }
+.as[data-ui="toysafe"]    { --acc: #10b981; --acc2: #a7f3d0; --bg: #0b1d17; }
+.as[data-ui="toytiles"]   { --acc: #f59e0b; --acc2: #fde68a; --bg: #221a0c; }
+.as[data-ui="toyguide"]   { --acc: #60a5fa; --acc2: #bfdbfe; --bg: #0e1a2e; }
+.as[data-ui="toyfocus"]   { --acc: #e5e7eb; --acc2: #9ca3af; --bg: #111113; }
+.as[data-ui="toydroid"]   { --acc: #34d399; --acc2: #a7f3d0; --bg: #0c1f1a; }
+.as[data-ui="toydesk"]    { --acc: #64748b; --acc2: #cbd5e1; --bg: #0f1419; }
+
+.as-h { display: flex; align-items: center; gap: 12px; padding: 16px 18px 6px; }
+.as-fig { flex: 0 0 auto; width: 46px; height: 46px; position: relative; }
+.as-fig i { position: absolute; inset: 0; background: var(--acc); display: block; }
+.as-t { font-size: 1.2em; font-weight: 800; margin: 0; }
+.as-s { color: var(--acc2); font-size: 13px; margin: 2px 0 0; }
+.as-step { font-size: 12px; color: #9aa6c0; padding: 0 18px; letter-spacing: .08em; text-transform: uppercase; }
+.as-b { padding: 10px 18px 6px; }
+.as-b p { margin: 8px 0; }
+.as-card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; margin: 8px 0; display: flex; gap: 10px; align-items: flex-start; }
+.as-card input { margin-top: 4px; }
+.as-card small { color: #9aa6c0; display: block; }
+.as-nav { display: flex; justify-content: space-between; gap: 8px; padding: 12px 18px 16px; flex-wrap: wrap; }
+.as button { font: inherit; color: #eef2fb; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 9px 14px; cursor: pointer; }
+.as button.pri { background: var(--acc); border-color: var(--acc); color: #06121a; font-weight: 700; }
+.as button:disabled { opacity: .4; cursor: default; }
+.as button:focus-visible, .as input:focus-visible { outline: 3px solid var(--acc2); outline-offset: 2px; }
+.as .say { font-size: 13px; }
+.as .hint { color: #9aa6c0; font-size: 13px; }
+.as-ui { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0; }
+.as-ui button { text-align: left; }
+.as-ui button[aria-pressed="true"] { border-color: var(--acc); box-shadow: inset 0 0 0 1px var(--acc); }
+.as-ui small { display: block; color: #9aa6c0; font-size: 12px; }
+
+/* Figur je Oberfläche (nur lustig), Form über data-mascot */
+.as-fig[data-mascot="circle"] i { border-radius: 50%; }
+.as-fig[data-mascot="square"] i { border-radius: 8px; }
+.as-fig[data-mascot="arch"] i { border-radius: 999px 999px 4px 4px; }
+.as-fig[data-mascot="shield"] i { clip-path: polygon(50% 0, 100% 18%, 100% 58%, 50% 100%, 0 58%, 0 18%); }
+.as-fig[data-mascot="cube"] i { transform: rotate(45deg) scale(.78); border-radius: 6px; }
+.as-fig[data-mascot="ring"] i { background: none; border: 6px solid var(--acc); border-radius: 50%; }
+.as-fig[data-mascot="dot"] i { inset: 14px; border-radius: 50%; }
+.as-fig[data-mascot="card"] i { border-radius: 6px; height: 60%; top: 20%; }
+.as-fig[data-mascot="drop"] i { border-radius: 50% 50% 50% 0; transform: rotate(-45deg) scale(.85); }
+.as-fig[data-mascot="bar"] i { height: 22%; top: 39%; border-radius: 4px; }
+
+/* Lustig: Animationen je Stil */
+.as[data-tone="fun"] .as-fig i { animation: as-idle 2.4s ease-in-out infinite; }
+.as[data-tone="fun"] .as-b { animation: as-in .5s ease both; }
+.as[data-tone="fun"][data-anim="spin"] .as-fig i { animation: as-spin 3s linear infinite; }
+.as[data-tone="fun"][data-anim="bounce"] .as-fig i { animation: as-bounce 1.2s ease-in-out infinite; }
+.as[data-tone="fun"][data-anim="pulse"] .as-fig i { animation: as-pulse 1.6s ease-in-out infinite; }
+.as[data-tone="fun"][data-anim="flip"] .as-fig i { animation: as-flip 2.2s ease-in-out infinite; }
+.as[data-tone="fun"][data-anim="zoom"] .as-fig i { animation: as-pulse 2.8s ease-in-out infinite; }
+.as[data-tone="fun"][data-anim="drop"] .as-fig i { animation: as-bounce 1.6s ease-in infinite; }
+.as[data-tone="fun"] .as-t { animation: as-title 3s ease-in-out infinite; }
+
+/* 3D-Figur (lustig, mit WebGL) */
+.as .as-fig.as-fig3d { width: 96px; height: 96px; flex: 0 0 96px; margin: 0; overflow: hidden; }
+.as .as-fig.as-fig3d canvas { display: block; width: 100%; height: 100%; }
+.as .as-fig.as-fig3d i { display: none; }
+
+/* Seriös: nur sanftes Einblenden, keine Figur */
+.as[data-tone="serious"] .as-fig { display: none; }
+.as[data-tone="serious"] .as-h { border-left: 4px solid var(--acc); margin-left: 4px; }
+.as[data-tone="serious"] .as-b { animation: as-fade .3s ease both; }
+
+@keyframes as-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes as-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes as-idle { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+@keyframes as-bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+@keyframes as-spin { to { transform: rotate(360deg); } }
+@keyframes as-pulse { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(.86); opacity: .75; } }
+@keyframes as-flip { 0% { transform: rotateY(0); } 50% { transform: rotateY(180deg); } 100% { transform: rotateY(360deg); } }
+@keyframes as-title { 0%,100% { letter-spacing: 0; } 50% { letter-spacing: .03em; } }
+
+html.tm-still .as *, html.tm-still .as-ov * { animation: none !important; }
+@media (prefers-reduced-motion: reduce) { .as *, .as-ov * { animation: none !important; transition: none !important; } }

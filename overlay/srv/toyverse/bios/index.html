@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ToyBIOS · Einstellungen</title>
+<link rel="icon" href="data:,">
+<style>
+  :root { --bg: #0c0f1a; --card: #151a2b; --line: #26304a; --ink: #e8ecf6; --mut: #9aa6c0; --t: #3ff5e0; --p: #9b5cff; --warn: #ffb020; }
+  :root:not([data-theme="light"]) { color-scheme: dark; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 system-ui, sans-serif; }
+  body { padding: 16px; box-sizing: border-box; max-width: 860px; margin: 0 auto; }
+  h1 { font-size: 1.5em; margin: 0 0 4px; }
+  h1 span { background: linear-gradient(90deg, var(--t), var(--p)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  h2 { font-size: 1.05em; margin: 0 0 8px; color: var(--t); }
+  .intro { background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--t); border-radius: 10px; padding: 12px 14px; margin: 14px 0; }
+  .sec { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin: 14px 0; }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; padding: 8px 0; border-top: 1px solid var(--line); }
+  .row:first-of-type { border-top: 0; }
+  .row small { color: var(--mut); display: block; }
+  .tag { display: inline-block; font-size: 11px; padding: 1px 7px; border-radius: 99px; border: 1px solid var(--line); color: var(--mut); margin-left: 6px; vertical-align: middle; }
+  .tag.now { color: var(--t); border-color: var(--t); }
+  .tag.reload { color: var(--warn); border-color: var(--warn); }
+  .tag.info { color: var(--mut); }
+  select, input[type=checkbox] { font: inherit; }
+  select { background: #0c1022; color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; min-width: 180px; }
+  button { font: inherit; color: var(--ink); background: #1d2540; border: 1px solid var(--line); border-radius: 8px; padding: 7px 12px; cursor: pointer; }
+  button.danger { border-color: #ff6b8a; color: #ffb3c2; }
+  button:focus-visible, select:focus-visible, input:focus-visible { outline: 3px solid var(--t); outline-offset: 2px; }
+  code { background: #0c1022; border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; font-size: 13px; word-break: break-all; }
+  dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; margin: 0; }
+  dt { color: var(--mut); }
+  dd { margin: 0; word-break: break-word; }
+  .hint { color: var(--mut); font-size: 13px; }
+  .hidden { display: none !important; }
+  .toast { position: sticky; bottom: 8px; background: #1d2540; border: 1px solid var(--t); border-radius: 10px; padding: 10px 12px; margin-top: 14px; display: flex; gap: 10px; align-items: center; justify-content: space-between; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+<h1><span>ToyBIOS</span> · Einstellungen</h1>
+<p class="hint">Hier stellst du ein, was ToyMesh besonders macht, und die üblichen Grundeinstellungen. Änderungen werden sofort gespeichert.</p>
+
+<div class="intro" role="note">
+  <b>So kommst du hierher:</b> Oben in der Leiste auf <b>BIOS</b> tippen oder auf der Tastatur <b>Strg + Umschalt + B</b> drücken.
+  Ein Bootmenü vor dem Systemstart gibt es in diesem Kit nicht (siehe Hinweis ganz unten).
+</div>
+
+<section class="sec" id="s-sys" aria-labelledby="h-sys"><h2 id="h-sys">System</h2><dl id="sysinfo"></dl></section>
+
+<section class="sec" aria-labelledby="h-ui"><h2 id="h-ui">Oberfläche</h2><div id="ui-box"></div></section>
+
+<section class="sec" aria-labelledby="h-op"><h2 id="h-op">Begrüßung beim Start</h2><div id="op-box"></div></section>
+
+<section class="sec" aria-labelledby="h-sec"><h2 id="h-sec">Sicherheit und Datenschutz</h2><div id="sec-box"></div></section>
+
+<section class="sec" aria-labelledby="h-look"><h2 id="h-look">Darstellung</h2><div id="look-box"></div></section>
+
+<section class="sec" aria-labelledby="h-as"><h2 id="h-as">Setup-Assistent</h2><div id="as-box"></div></section>
+
+<section class="sec" aria-labelledby="h-upd"><h2 id="h-upd">Updates und Wiederherstellung</h2><div id="upd-box"></div></section>
+
+<section class="sec" aria-labelledby="h-net"><h2 id="h-net">Dienste und Netz</h2><div id="net-box"></div></section>
+
+<section class="sec" aria-labelledby="h-reset"><h2 id="h-reset">Zurücksetzen</h2><div id="reset-box"></div></section>
+
+<p class="hint">Hinweis: Ein Einstellungsmenü vor dem Systemstart (echtes BIOS oder UEFI) fehlt noch. Dafür müsste das Gerät einen eigenen Bootloader mit Menü bekommen, das ist ein eigener Arbeitsschritt beim Bauen des Images. Die Einstellungen hier wirken innerhalb von ToyMesh.</p>
+
+<div class="toast hidden" id="toast" role="status" aria-live="polite"><span id="toast-t"></span><button id="toast-b" type="button">Neu laden</button></div>
+
+<script src="../ui/prefs.js"></script>
+<script src="../ui/openers.js"></script>
+<script src="../ui/assist.js"></script>
+<script src="bios.js"></script>
+</body>
+</html>

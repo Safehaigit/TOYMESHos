@@ -21,7 +21,7 @@ SIGLIB="${TOYMESH_LIB:-/usr/local/lib/toymesh}/sigcheck.sh"
 BAK="${TOYUI_BAK:-/var/lib/toymesh/ui-backup}"
 KEEP=3
 # Nur diese Dateien dürfen durch ein Update ersetzt werden. Alles andere wird abgewiesen.
-ALLOWED="index.html ui/shell.js ui/themes.css ui/toypost.js"
+ALLOWED="index.html ui/shell.js ui/themes.css ui/toypost.js ui/openers.js"
 
 log()  { echo "[toyui] $*"; logger -t toyui "$*" 2>/dev/null || true; }
 die()  { log "FEHLER: $*"; exit 1; }
