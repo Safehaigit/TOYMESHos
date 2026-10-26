@@ -1,0 +1,175 @@
+#!/bin/sh
+# ToySafe-Prüfung (lokal, nur lesend). Prüft den Zustand des Tablets und zeigt eine Ampel.
+#
+#   toysafe-check            Ampel und Befunde auf dem Bildschirm
+#   toysafe-check --json     nur JSON (für ToySafe und ToyPost-Meldung später)
+#
+# Grundsätze (docs/spaeter/14-toysafe.md, G1 bis G4):
+#   - nie Schlüssel, nie Phrasen, nie signieren
+#   - ändert keine Systemeinstellung, warnt nur
+#   - nur lokal, keine Netzverbindung, keine Inhalte nach außen
+# Ausgabe-Codes: 0 = grün, 1 = gelb, 2 = rot. Die Datei /var/lib/toymesh/schutzstufe.json
+# wird nur geschrieben, wenn das Verzeichnis existiert.
+set -u
+
+STATE=/var/lib/toymesh
+OUT="$STATE/schutzstufe.json"
+JSON_ONLY=0
+[ "${1:-}" = "--json" ] && JSON_ONLY=1
+
+# Ergebnisse sammeln: id|name|stufe|befund  (stufe: gruen, gelb, rot)
+RESULTS=""
+add() { RESULTS="$RESULTS
+$1|$2|$3|$4"; }
+have() { command -v "$1" >/dev/null 2>&1; }
+label() { case "$1" in gruen) echo GRÜN ;; gelb) echo GELB ;; *) echo ROT ;; esac; }
+clean() { printf '%s' "$1" | tr -d '"\\' | tr '\n' ' ' | cut -c1-160; }
+
+# 1. Festplatte verschlüsselt (LUKS, Wurzel liegt auf dm-crypt)
+ROOTDEV=$(awk '$2=="/"{print $1; exit}' /proc/mounts 2>/dev/null)
+case "$ROOTDEV" in
+    /dev/mapper/*) add fde "Festplatte verschlüsselt" gruen "Wurzel liegt auf $ROOTDEV" ;;
+    "")            add fde "Festplatte verschlüsselt" gelb "Wurzel nicht ermittelbar" ;;
+    *)             add fde "Festplatte verschlüsselt" rot "Wurzel $ROOTDEV ist NICHT verschlüsselt" ;;
+esac
+
+# 2. Firewall: eingehend standardmäßig verwerfen
+if have nft; then
+    if nft list ruleset 2>/dev/null | grep -q 'policy drop'; then
+        add fw "Firewall (Standard: verwerfen)" gruen "nftables mit policy drop aktiv"
+    elif nft list ruleset >/dev/null 2>&1; then
+        add fw "Firewall (Standard: verwerfen)" gelb "nftables läuft ohne policy drop"
+    else
+        add fw "Firewall (Standard: verwerfen)" rot "nftables antwortet nicht"
+    fi
+else
+    add fw "Firewall (Standard: verwerfen)" rot "nft nicht installiert"
+fi
+
+# 3. Fernzugang per SSH
+SSHD_RUN=0
+rc-service sshd status >/dev/null 2>&1 && SSHD_RUN=1
+if [ "$SSHD_RUN" -eq 0 ]; then
+    add ssh "Fernzugang (SSH)" gruen "sshd läuft nicht"
+else
+    PW=$(cat /etc/ssh/sshd_config /etc/ssh/sshd_config.d/*.conf 2>/dev/null | grep -i '^[[:space:]]*PasswordAuthentication' | tail -n1 | awk '{print tolower($2)}')
+    if [ "$PW" = "no" ]; then
+        add ssh "Fernzugang (SSH)" gruen "sshd läuft, nur mit Schlüssel"
+    else
+        add ssh "Fernzugang (SSH)" rot "sshd läuft, Passwort-Anmeldung erlaubt"
+    fi
+fi
+
+# 4. Uhrzeit (Abweichung höchstens 15 Sekunden)
+if have chronyc; then
+    OFF=$(chronyc tracking 2>/dev/null | awk -F': *' '/System time/{split($2,a," "); print a[1]; exit}')
+    if [ -z "$OFF" ]; then
+        add time "Uhrzeit" gelb "chrony liefert keinen Wert"
+    else
+        BIG=$(awk -v v="$OFF" 'BEGIN{ if (v < 0) v = -v; print (v > 15) ? 1 : 0 }')
+        if [ "$BIG" = "1" ]; then
+            add time "Uhrzeit" rot "Abweichung $OFF s (über 15 s)"
+        else
+            add time "Uhrzeit" gruen "Abweichung $OFF s"
+        fi
+    fi
+else
+    add time "Uhrzeit" gelb "chrony nicht installiert"
+fi
+
+# 5. Ausstehende Updates und Neustart
+PENDING=$(apk version -l '<' 2>/dev/null | grep -c . || true)
+if [ -f "$STATE/reboot-required" ]; then
+    add upd "Updates und Neustart" rot "Neustart nötig (Kernel- oder Start-Paket aktualisiert)"
+elif [ "${PENDING:-0}" -gt 0 ]; then
+    add upd "Updates und Neustart" gelb "$PENDING Paket-Update(s) ausstehend"
+else
+    add upd "Updates und Neustart" gruen "keine ausstehenden Updates"
+fi
+
+# 6. Paketquellen: Testing nur mit Tag @testing
+if grep -Eq '^[^@#]*edge/testing' /etc/apk/repositories 2>/dev/null; then
+    add repo "Paketquellen" gelb "Testing-Quelle ohne @testing-Markierung"
+else
+    add repo "Paketquellen" gruen "Testing nur markiert oder nicht eingebunden"
+fi
+
+# 7. Schutzdienste laufen
+MISS=""
+rc-service toyverse-web status >/dev/null 2>&1 || MISS="$MISS toyverse-web"
+rc-service fail2ban status >/dev/null 2>&1 || MISS="$MISS fail2ban"
+if [ -n "$MISS" ]; then
+    add svc "Schutzdienste" gelb "nicht aktiv:$MISS"
+else
+    add svc "Schutzdienste" gruen "fail2ban und toyverse-web laufen"
+fi
+
+# 8. Oberfläche: signierte Updates mit Schwellwert eingerichtet
+THR=$(sed -n 's/^THRESHOLD=\([0-9]*\).*/\1/p' /etc/toymesh/ui-update.conf 2>/dev/null | head -n1)
+THR=${THR:-2}
+NKEY=$(ls -1 /etc/toymesh/keys/*.pub 2>/dev/null | wc -l)
+if [ -f /srv/toyverse/ui/manifest.json ] && [ "$NKEY" -ge "$THR" ]; then
+    V=$(sed -n 's/.*"version":"\([^"]*\)".*/\1/p' /srv/toyverse/ui/manifest.json | head -n1)
+    add uisig "Oberfläche (signierte Updates)" gruen "Version ${V:-?}, $NKEY Schlüssel, Schwelle $THR"
+else
+    add uisig "Oberfläche (signierte Updates)" gelb "Manifest fehlt oder zu wenige Schlüssel ($NKEY, nötig $THR)"
+fi
+
+# 8b. Warnliste: installiert, mit ausreichend Unterschriften und nicht älter als 14 Tage
+WDIR=/var/lib/toymesh/warnliste
+if [ -f "$WDIR/current.json" ] && have toysafe-warn && toysafe-warn --status >/dev/null 2>&1; then
+    if [ -n "$(find "$WDIR/current.json" -mtime +14 2>/dev/null)" ]; then
+        add warn "Warnliste" gelb "älter als 14 Tage, bitte 'toysafe-warn --update'"
+    else
+        add warn "Warnliste" gruen "$(toysafe-warn --status 2>/dev/null | head -n1)"
+    fi
+else
+    add warn "Warnliste" gelb "nicht installiert oder ohne ausreichende Unterschriften"
+fi
+
+# 9. Keine Schlüssel im Web- oder Konfigurationsverzeichnis
+LEAK=$(find /srv/toyverse /etc/toymesh -maxdepth 4 \( -name '*.pem' -o -name '*ui-sign*' -o -name '*.key' \) 2>/dev/null | head -n3 | tr '\n' ' ')
+if [ -n "$LEAK" ]; then
+    add keys "Keine Schlüssel im Web-Bereich" rot "gefunden: $(clean "$LEAK")"
+else
+    add keys "Keine Schlüssel im Web-Bereich" gruen "keine Schlüsseldateien gefunden"
+fi
+
+# ---- Gesamtstufe und Ausgabe ----
+LEVEL=gruen
+echo "$RESULTS" | grep -q '|rot|' && LEVEL=rot
+[ "$LEVEL" = gruen ] && echo "$RESULTS" | grep -q '|gelb|' && LEVEL=gelb
+NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null)
+
+json() {
+    printf '{"schema":"toysafe-check/1","zeit":"%s","stufe":"%s","pruefungen":[' "$NOW" "$LEVEL"
+    first=1
+    echo "$RESULTS" | while IFS='|' read -r id name st detail; do
+        [ -z "$id" ] && continue
+        printf '%s{"id":"%s","name":"%s","stufe":"%s","befund":"%s"}' \
+            "$([ "$first" -eq 1 ] || echo ,)" "$id" "$(clean "$name")" "$st" "$(clean "$detail")"
+        first=0
+    done
+    printf ']}\n'
+}
+
+if [ "$JSON_ONLY" -eq 1 ]; then
+    json
+else
+    echo "ToySafe-Prüfung · Gesamtstufe: $(label "$LEVEL")"
+    echo "$RESULTS" | while IFS='|' read -r id name st detail; do
+        [ -z "$id" ] && continue
+        echo "  [$(label "$st")] $name: $detail"
+    done
+    echo "Nur Hinweise. Nichts wurde geändert, gesperrt oder gesendet."
+fi
+
+if [ -d "$STATE" ]; then
+    json > "$OUT.new" 2>/dev/null && mv -f "$OUT.new" "$OUT" 2>/dev/null || true
+fi
+
+case "$LEVEL" in
+    gruen) exit 0 ;;
+    gelb)  exit 1 ;;
+    *)     exit 2 ;;
+esac

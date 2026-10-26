@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ToyMesh · 1001 Nacht</title>
+<style>
+  :root { --t: #3ff5e0; --p: #9b5cff; --w: #ffffff; }
+  html, body { margin: 0; height: 100%; background: linear-gradient(#0b0720, #2a1456 60%, #5b2c8c); overflow: hidden; }
+  .stage { position: fixed; inset: 0; font-family: Georgia, "Times New Roman", serif; color: var(--w); }
+  .moon { position: absolute; left: 50%; top: 18%; width: 90px; height: 90px; margin-left: -45px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #fff, #cfe9ff 60%, #8fd9ff);
+    box-shadow: 0 0 40px rgba(63,245,224,.6), 0 0 90px rgba(155,92,255,.5); animation: rise 2s ease-out forwards; opacity: 0; }
+  .arch { position: absolute; left: 50%; top: 14%; width: min(64vw, 340px); height: min(70vh, 420px); margin-left: calc(min(64vw, 340px) / -2);
+    border: 3px solid var(--t); border-bottom: 0; border-radius: 999px 999px 0 0;
+    box-shadow: inset 0 0 40px rgba(63,245,224,.35), 0 0 30px rgba(63,245,224,.5);
+    clip-path: inset(100% 0 0 0); animation: open 1.6s ease-out .4s forwards; }
+  .title { position: absolute; left: 0; right: 0; top: 46%; text-align: center; }
+  .title h1 { margin: 0; font-size: clamp(38px, 11vw, 84px); font-weight: 700; letter-spacing: .04em;
+    text-shadow: 0 0 12px var(--t), 0 0 28px var(--p); opacity: 0; animation: fade 1s ease 1.6s forwards; }
+  .title p { margin: 12px 0 0; font-size: clamp(13px, 3.4vw, 18px); color: #e8dcff; letter-spacing: .14em; opacity: 0; animation: fade 1s ease 2.4s forwards; }
+  .dunes { position: absolute; left: -10%; right: -10%; bottom: 0; height: 32vh; }
+  .dune { position: absolute; bottom: 0; left: 0; width: 120%; height: 100%; fill: #1a0b33; animation: slide 9s ease-in-out infinite alternate; }
+  .dune.b { fill: #2e1450; animation-duration: 12s; animation-direction: alternate-reverse; opacity: .85; }
+  .star { position: absolute; width: 3px; height: 3px; background: var(--w); border-radius: 50%; animation: twinkle 2.4s ease-in-out infinite; }
+  .skip { position: fixed; right: 12px; bottom: 10px; color: #cbb8ee; font: 13px system-ui, sans-serif; background: none; border: 0; }
+  @keyframes open { to { clip-path: inset(0 0 0 0); } }
+  @keyframes fade { to { opacity: 1; } }
+  @keyframes rise { from { opacity: 0; transform: translateY(60px); } to { opacity: 1; transform: none; } }
+  @keyframes slide { from { transform: translateX(-6%); } to { transform: translateX(6%); } }
+  @keyframes twinkle { 0%,100% { opacity: .2 } 50% { opacity: 1 } }
+  @media (prefers-reduced-motion: reduce) { *, *::after { animation-duration: .01s !important; animation-delay: 0s !important; } }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="star" style="left:12%;top:10%"></div><div class="star" style="left:80%;top:8%;animation-delay:.6s"></div>
+  <div class="star" style="left:30%;top:24%;animation-delay:1.2s"></div><div class="star" style="left:88%;top:34%;animation-delay:.3s"></div>
+  <div class="star" style="left:6%;top:38%;animation-delay:1.8s"></div><div class="star" style="left:70%;top:20%;animation-delay:.9s"></div>
+  <div class="moon"></div>
+  <div class="arch"></div>
+  <div class="title"><h1>ToyMesh</h1><p>Das Gerät erzählt seine Geschichte</p></div>
+  <svg class="dunes" viewBox="0 0 1200 300" preserveAspectRatio="none" aria-hidden="true">
+    <path class="dune" d="M0 200 Q200 90 420 170 T840 150 T1200 180 V300 H0 Z"/>
+    <path class="dune b" d="M0 240 Q260 150 520 220 T1040 210 T1200 230 V300 H0 Z"/>
+  </svg>
+</div>
+<button class="skip" id="skip" type="button">Überspringen</button>
+<script>
+  function done() { try { parent.postMessage("opener-done", "*"); } catch (e) {} }
+  document.getElementById("skip").addEventListener("click", done);
+  document.body.addEventListener("click", done);
+  setTimeout(done, 6500);
+</script>
+</body>
+</html>

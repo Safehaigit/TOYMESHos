@@ -1,0 +1,85 @@
+#!/bin/sh
+# ToyVerse Tab — app auto-updater.
+# Reads /srv/toyverse/apps.json and updates every app that has a non-empty
+# "source". Offline-safe (skips on no network), atomic writes, optional
+# SHA-256 verification. Run from cron (daily) or by hand: `toyverse-app-sync`.
+#
+# source formats understood:
+#   https://…/app.html            -> downloaded to apps/<id>.html (atomic)
+#   https://…/repo.git            -> git clone/pull into src/<id>, then the
+#                                    file named by "build" (default index.html)
+#                                    is copied to apps/<id>.html
+#   git@host:owner/repo.git       -> same (needs an SSH key for that host)
+# optional per-app field "sha256": expected hash of the downloaded file.
+# optional per-app field "build":  path inside the repo to publish.
+set -eu
+
+ROOT="/srv/toyverse"
+APPS="$ROOT/apps"
+SRC="$ROOT/src"
+MAN="$ROOT/apps.json"
+TMP="$(mktemp -d)"
+trap 'rm -rf "$TMP"' EXIT
+
+log(){ logger -t toyverse-app-sync "$*" 2>/dev/null || true; echo "[app-sync] $*"; }
+
+command -v jq >/dev/null 2>&1 || { log "jq missing — install with: apk add jq"; exit 1; }
+[ -f "$MAN" ] || { log "no manifest at $MAN"; exit 0; }
+
+# quick connectivity probe; if offline, do nothing (not an error)
+if ! { command -v curl >/dev/null 2>&1 && curl -sfI --max-time 8 https://github.com >/dev/null 2>&1; } \
+   && ! ping -c1 -W2 github.com >/dev/null 2>&1; then
+    log "offline — skipping update"; exit 0
+fi
+
+mkdir -p "$APPS" "$SRC"
+count=0
+
+# iterate apps with a non-empty source
+jq -c '.apps[] | select(.source!=null and .source!="")' "$MAN" | while read -r app; do
+    id=$(printf '%s' "$app"   | jq -r '.id')
+    source=$(printf '%s' "$app" | jq -r '.source')
+    sha=$(printf '%s' "$app"   | jq -r '.sha256 // ""')
+    build=$(printf '%s' "$app" | jq -r '.build // "index.html"')
+    [ -n "$id" ] || continue
+
+    case "$source" in
+        *.git|git@*)
+            log "$id: git sync $source"
+            if [ -d "$SRC/$id/.git" ]; then
+                git -C "$SRC/$id" fetch --quiet --depth=1 origin \
+                  && git -C "$SRC/$id" reset --hard --quiet origin/HEAD || { log "$id: git pull failed"; continue; }
+            else
+                rm -rf "$SRC/$id"
+                git clone --quiet --depth=1 "$source" "$SRC/$id" || { log "$id: git clone failed"; continue; }
+            fi
+            if [ -f "$SRC/$id/$build" ]; then
+                cp "$SRC/$id/$build" "$APPS/$id.html.new" && mv "$APPS/$id.html.new" "$APPS/$id.html"
+                log "$id: updated from repo ($build)"
+                count=$((count+1))
+            else
+                log "$id: build file '$build' not found in repo"
+            fi
+            ;;
+        http://*|https://*)
+            log "$id: download $source"
+            if curl -sfL --max-time 60 "$source" -o "$TMP/$id"; then
+                [ -s "$TMP/$id" ] || { log "$id: empty download, keeping old"; continue; }
+                if [ -n "$sha" ]; then
+                    got=$(sha256sum "$TMP/$id" | awk '{print $1}')
+                    [ "$got" = "$sha" ] || { log "$id: SHA mismatch (want $sha got $got) — rejected"; continue; }
+                fi
+                mv "$TMP/$id" "$APPS/$id.html"
+                log "$id: updated (download)"
+                count=$((count+1))
+            else
+                log "$id: download failed, keeping old version"
+            fi
+            ;;
+        *)
+            log "$id: unknown source scheme, skipped"
+            ;;
+    esac
+done
+
+log "done"

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ToyMesh · ToySafe Schild</title>
+<style>
+  :root { --t: #3ff5e0; --p: #9b5cff; --w: #ffffff; }
+  html, body { margin: 0; height: 100%; background: radial-gradient(circle at 50% 40%, #101426, #05060b 70%); overflow: hidden; }
+  .stage { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--w); font-family: system-ui, sans-serif; }
+  svg.shield { width: min(52vmin, 300px); height: auto; overflow: visible; }
+  .outline { fill: rgba(63,245,224,.08); stroke: var(--t); stroke-width: 4; stroke-linejoin: round;
+    stroke-dasharray: 900; stroke-dashoffset: 900; animation: draw 1.6s ease-out forwards;
+    filter: drop-shadow(0 0 8px rgba(63,245,224,.8)); }
+  .inner { stroke: var(--p); stroke-width: 2; fill: none; opacity: 0; animation: fade .6s ease 1.4s forwards; }
+  .lock { fill: var(--t); opacity: 0; transform-origin: center; animation: lock .6s cubic-bezier(.2,1.4,.4,1) 1.9s forwards; }
+  .scan { position: absolute; left: 0; right: 0; height: 3px; top: 0;
+    background: linear-gradient(90deg, transparent, var(--t), transparent);
+    box-shadow: 0 0 18px var(--t); opacity: 0; animation: sweep 1.2s ease-in-out .3s 1 forwards; }
+  .name { margin-top: 26px; font: 800 clamp(26px, 7vw, 46px)/1 system-ui, sans-serif; letter-spacing: .08em; opacity: 0; animation: rise .7s ease 2.4s forwards; }
+  .name b { background: linear-gradient(90deg, var(--t), var(--p)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .sub { margin-top: 10px; font-size: clamp(12px, 3vw, 15px); letter-spacing: .25em; text-transform: uppercase; color: #b9c4d6; opacity: 0; animation: fade .6s ease 2.8s forwards; }
+  .skip { position: fixed; right: 12px; bottom: 10px; color: #8a8fa3; font: 13px system-ui, sans-serif; background: none; border: 0; }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  @keyframes fade { to { opacity: 1; } }
+  @keyframes lock { to { opacity: 1; transform: scale(1); } }
+  @keyframes sweep { 0% { top: 10%; opacity: 0 } 15% { opacity: 1 } 85% { opacity: 1 } 100% { top: 90%; opacity: 0 } }
+  @keyframes rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { *, *::after { animation-duration: .01s !important; animation-delay: 0s !important; } }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="scan"></div>
+  <svg class="shield" viewBox="0 0 200 240" aria-hidden="true">
+    <path class="outline" pathLength="900" d="M100 10 L180 40 L180 120 C180 170 146 208 100 230 C54 208 20 170 20 120 L20 40 Z"/>
+    <path class="inner" d="M100 34 L162 58 L162 120 C162 158 136 186 100 206 C64 186 38 158 38 120 L38 58 Z"/>
+    <path class="lock" d="M80 110 h40 v34 h-40 z M88 110 v-12 a12 12 0 0 1 24 0 v12 h-6 v-12 a6 6 0 0 0 -12 0 v12 z"/>
+  </svg>
+  <div class="name"><b>ToyMesh</b> · ToySafe</div>
+  <div class="sub">Schutz aktiv · Gerät geprüft</div>
+</div>
+<button class="skip" id="skip" type="button">Überspringen</button>
+<script>
+  function done() { try { parent.postMessage("opener-done", "*"); } catch (e) {} }
+  document.getElementById("skip").addEventListener("click", done);
+  document.body.addEventListener("click", done);
+  setTimeout(done, 6000);
+</script>
+</body>
+</html>

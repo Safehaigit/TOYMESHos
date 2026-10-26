@@ -1,0 +1,15 @@
+/* ToyVerse Tab — local fonts, no CDN, no tracking, works offline.
+ * The woff2 files are placed here by scripts/fetch-fonts.sh (run on your PC
+ * where the network works). If they're absent, everything still renders via
+ * the Georgia / system-ui fallbacks in each page's CSS — nothing breaks.
+ */
+@font-face{font-family:"Amiri";font-style:normal;font-weight:400;font-display:swap;
+  src:local("Amiri"),url("amiri-400.woff2") format("woff2")}
+@font-face{font-family:"Amiri";font-style:normal;font-weight:700;font-display:swap;
+  src:local("Amiri Bold"),url("amiri-700.woff2") format("woff2")}
+@font-face{font-family:"Chakra Petch";font-style:normal;font-weight:400;font-display:swap;
+  src:local("Chakra Petch"),url("chakra-400.woff2") format("woff2")}
+@font-face{font-family:"Chakra Petch";font-style:normal;font-weight:600;font-display:swap;
+  src:local("Chakra Petch SemiBold"),url("chakra-600.woff2") format("woff2")}
+@font-face{font-family:"Chakra Petch";font-style:normal;font-weight:700;font-display:swap;
+  src:local("Chakra Petch Bold"),url("chakra-700.woff2") format("woff2")}

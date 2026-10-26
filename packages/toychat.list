@@ -1,0 +1,3 @@
+# ToyChat-Relais läuft auf Node.js (keine weiteren Abhängigkeiten).
+# Videoanrufe brauchen einen Browser mit WebRTC: ToySurf Voll (Firefox ESR).
+nodejs

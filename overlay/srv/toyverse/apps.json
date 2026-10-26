@@ -1,0 +1,87 @@
+{
+  "_comment": "ToyVerse app manifest. The launcher reads this; toyverse-app-sync updates apps that have a non-empty 'source'. type: local=real html file here | section=deep-link into the website | remote=pull from source.",
+  "updated": "2026-10-26",
+  "apps": [
+    {
+      "id": "toysafe",
+      "name": "ToySafe Cockpit",
+      "status": "live",
+      "type": "local",
+      "entry": "apps/toysafe-cockpit.html",
+      "desc": "Supply- & Wallet-Dashboard, Anti-Scam-Training, Live-Prüfung der Ökonomie.",
+      "source": ""
+    },
+    {
+      "id": "toyverse",
+      "name": "ToyVerse",
+      "status": "live",
+      "type": "local",
+      "entry": "apps/toyverse-website.html",
+      "desc": "Das Ökosystem im Überblick: alle fünf Bausteine unter einem Dach.",
+      "source": ""
+    },
+    {
+      "id": "toysearch",
+      "name": "ToySearch",
+      "status": "live",
+      "type": "local",
+      "entry": "toysearch/index.html",
+      "desc": "Privacy-Suche: offline über deine ToyVerse-Inhalte + datensparsame Web-Suche. Standardmaschine in ToySurf.",
+      "source": ""
+    },
+    {
+      "id": "toypay",
+      "name": "TOYPAY",
+      "status": "dev",
+      "type": "section",
+      "entry": "apps/toyverse-website.html#toypay",
+      "desc": "Wallet für ToyCoin auf Polygon. Senden, empfangen, offline zahlen, Händler-Kasse.",
+      "source": ""
+    },
+    {
+      "id": "toyquest",
+      "name": "TOYQUEST",
+      "status": "planned",
+      "type": "section",
+      "entry": "apps/toyverse-website.html#toyquest",
+      "desc": "Das Spiel im Stil von 1001 Nacht — erklärt dir die ToyChain-Technik spielerisch.",
+      "source": ""
+    },
+    {
+      "id": "toychain",
+      "name": "ToyChain",
+      "status": "planned",
+      "type": "section",
+      "entry": "apps/toyverse-website.html#toychain",
+      "desc": "Schlanke Blockchain (< 256 MB), EVM-kompatibel, läuft auf alten Geräten wie diesem.",
+      "source": ""
+    },
+    {
+      "id": "toycash",
+      "name": "ToyCash",
+      "status": "concept",
+      "type": "section",
+      "entry": "apps/toyverse-website.html#toycash",
+      "desc": "Privates Euro-Bargeld, auch offline. Verschlüsselte Beträge, Stablecoin auf der ToyChain.",
+      "source": ""
+    },
+    {
+      "id": "toyscan",
+      "name": "ToyScan",
+      "status": "concept",
+      "type": "section",
+      "entry": "apps/toyverse-website.html#toyscan",
+      "desc": "Block-Explorer mit Live-Prüfung der Supply. Grünes Licht, wenn alle Kriterien stimmen.",
+      "source": ""
+    },
+    {
+      "id": "toychat",
+      "name": "ToyChat",
+      "status": "dev",
+      "type": "local",
+      "entry": "toychat/index.html",
+      "desc": "Verschlüsselter Teamchat mit Kanälen, Aufgaben (wie Slack) und Videoanrufen. Ende-zu-Ende, signierte Nachrichten.",
+      "source": ""
+    }
+  ]
+}

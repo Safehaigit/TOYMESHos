@@ -1,0 +1,20 @@
+#!/sbin/openrc-run
+# Serves the ToyVerse apps from /srv/toyverse on loopback only.
+# Enable:  rc-update add toyverse-web default ; rc-service toyverse-web start
+
+name="toyverse-web"
+description="ToyVerse local app server (busybox httpd, loopback only)"
+
+WEBROOT="/srv/toyverse"
+BIND="127.0.0.1:8080"
+command="/usr/bin/httpd"
+command_args="-f -p ${BIND} -h ${WEBROOT}"
+command_background="yes"
+pidfile="/run/${name}.pid"
+output_log="/var/log/${name}.log"
+error_log="/var/log/${name}.log"
+
+depend() {
+    need localmount
+    after bootmisc
+}

@@ -1,0 +1,24 @@
+#!/sbin/openrc-run
+# ToyChat-Relais: leitet nur verschlüsselte Daten weiter, kennt keine Schlüssel.
+# Enable:  rc-update add toychat-server default ; rc-service toychat-server start
+
+name="toychat-server"
+description="ToyChat relay (verschlüsselt, ohne Klartext auf dem Server)"
+command="/usr/bin/node"
+command_args="/usr/local/lib/toychat/server.js"
+command_user="toychat:toychat"
+command_background="yes"
+pidfile="/run/${name}.pid"
+output_log="/var/log/${name}.log"
+error_log="/var/log/${name}.log"
+
+export TOYCHAT_HOST=127.0.0.1
+export TOYCHAT_PORT=8090
+export TOYCHAT_DATA=/var/lib/toychat
+export TOYCHAT_WEB=/srv/toyverse/toychat
+export TOYCHAT_CONF=/etc/toychat/server.json
+
+depend() {
+    need localmount
+    after bootmisc toyverse-web
+}

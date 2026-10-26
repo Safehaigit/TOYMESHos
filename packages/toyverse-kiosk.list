@@ -1,0 +1,19 @@
+# ToyVerse Tab — app serving + kiosk
+#
+# The ToyVerse apps are self-contained HTML. We serve them from localhost and
+# show them in a lightweight WebKit browser. Two modes — choose in BUILD.md:
+#
+#   APPLIANCE / KIOSK : boots straight into the launcher, locked to the apps.
+#   WORKSTATION       : normal Sxmo desktop; launcher is one tap away, and the
+#                       security-research tools are usable in a terminal.
+#
+# The default install sets up WORKSTATION and ALSO installs the kiosk service
+# disabled, so you can switch with one command (see scripts/install-overlay.sh).
+
+cog                 # WPE-WebKit browser, single-page kiosk friendly
+cage                # Wayland kiosk compositor (fullscreen single app) — optional
+busybox-extras      # busybox httpd static server for /srv/toyverse
+
+# If you want a fuller browser for the workstation mode (heavier on 1 GB RAM):
+# firefox-esr       # usable but slow here; prefer cog for the dashboards
+# netsurf           # very light, but weak modern-CSS/JS support — apps may break

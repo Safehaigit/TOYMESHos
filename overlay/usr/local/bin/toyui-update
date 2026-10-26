@@ -1,0 +1,138 @@
+#!/bin/sh
+# ToyMesh UI-Updater. Aktualisiert index.html und ui/* aus einer SIGNIERTEN Quelle.
+#
+# Ablauf:
+#   1. manifest.json und manifest.sigs/<signierer>.sig holen
+#   2. mindestens THRESHOLD unabhängige vertrauenswürdige Schlüssel (/etc/toymesh/keys) müssen
+#      das Manifest gültig signiert haben (Ed25519). Ein einzelner Schlüssel reicht nie.
+#   3. Version vergleichen (nur neuere Versionen werden eingespielt)
+#   4. jede Datei laden und per SHA-256 gegen das signierte Manifest prüfen
+#   5. aktuelle Version sichern, Dateien atomar ersetzen, Gegenprobe
+#   6. schlägt die Gegenprobe fehl, wird automatisch auf die Sicherung zurückgerollt
+#
+# Ohne Konfiguration (SOURCE leer) macht das Skript nichts.
+# Rückbau von Hand:  toyui-update --rollback
+set -eu
+
+ROOT="${TOYUI_ROOT:-/srv/toyverse}"
+CONF="${TOYUI_CONF:-/etc/toymesh/ui-update.conf}"
+KEYDIR="${TOYUI_KEYDIR:-/etc/toymesh/keys}"
+SIGLIB="${TOYMESH_LIB:-/usr/local/lib/toymesh}/sigcheck.sh"
+BAK="${TOYUI_BAK:-/var/lib/toymesh/ui-backup}"
+KEEP=3
+# Nur diese Dateien dürfen durch ein Update ersetzt werden. Alles andere wird abgewiesen.
+ALLOWED="index.html ui/shell.js ui/themes.css ui/toypost.js"
+
+log()  { echo "[toyui] $*"; logger -t toyui "$*" 2>/dev/null || true; }
+die()  { log "FEHLER: $*"; exit 1; }
+installed_version() { jq -r '.version // "0"' "$ROOT/ui/manifest.json" 2>/dev/null || echo 0; }
+
+# restore_from <verzeichnis>: stellt eine Sicherung wieder her
+restore_from() {
+  cp -a "$1/." "$ROOT/" || die "Rückbau aus $1 fehlgeschlagen"
+  log "zurückgesetzt auf Sicherung $(basename "$1")"
+}
+
+if [ "${1:-}" = "--rollback" ]; then
+  last=$(ls -1 "$BAK" 2>/dev/null | sort -V | tail -n1 || true)
+  [ -n "$last" ] || die "keine Sicherung vorhanden"
+  restore_from "$BAK/$last"
+  exit 0
+fi
+
+[ -f "$CONF" ] || { log "keine Konfiguration ($CONF) – UI-Updates sind aus"; exit 0; }
+SOURCE=""
+THRESHOLD=2
+# shellcheck disable=SC1090
+. "$CONF"
+case "$THRESHOLD" in ''|*[!0-9]*) die "THRESHOLD ist keine Zahl" ;; esac
+[ "$THRESHOLD" -ge 2 ] || die "THRESHOLD muss mindestens 2 sein (ein Schlüssel allein reicht nie)"
+[ -n "$SOURCE" ] || { log "SOURCE ist leer – UI-Updates sind aus"; exit 0; }
+case "$SOURCE" in
+  https://*) ;;
+  http://127.0.0.1*|http://localhost*) ;;
+  *) die "SOURCE muss https:// sein (http:// nur für 127.0.0.1/localhost)" ;;
+esac
+SOURCE="${SOURCE%/}"
+[ -d "$KEYDIR" ] && [ -f "$SIGLIB" ] || die "Schlüsselordner oder Prüfbibliothek fehlt"
+# shellcheck disable=SC1090
+. "$SIGLIB"
+NKEYS=$(ls -1 "$KEYDIR"/*.pub 2>/dev/null | wc -l)
+[ "$NKEYS" -ge "$THRESHOLD" ] || die "zu wenige vertrauenswürdige Schlüssel ($NKEYS, nötig $THRESHOLD)"
+
+TMP=$(mktemp -d)
+trap 'rm -rf "$TMP"' EXIT
+get() { curl -sfL --max-time 60 "$1" -o "$2"; }
+
+# Offline oder Quelle nicht erreichbar: still beenden, kein Fehler
+get "$SOURCE/manifest.json" "$TMP/manifest.json" || { log "Quelle nicht erreichbar – übersprungen"; exit 0; }
+# Unterschriften aller vertrauenswürdigen Signierer holen; fehlende oder falsche zählen nicht
+mkdir -p "$TMP/sigs"
+for pub in "$KEYDIR"/*.pub; do
+  name=$(basename "$pub" .pub)
+  get "$SOURCE/manifest.sigs/$name.sig" "$TMP/sigs/$name.sig" || true
+done
+GOOD=$(count_valid_sigs "$TMP/manifest.json" "$TMP/sigs" "$KEYDIR")
+if [ "$GOOD" -lt "$THRESHOLD" ]; then
+  die "nur $GOOD gültige Unterschrift(en), nötig $THRESHOLD – Update verworfen"
+fi
+log "Manifest von $GOOD Signierern bestätigt (nötig $THRESHOLD)"
+
+NEW=$(jq -r '.version // empty' "$TMP/manifest.json")
+[ -n "$NEW" ] || die "Manifest ohne Version"
+CUR=$(installed_version)
+if [ "$NEW" = "$CUR" ]; then log "bereits aktuell ($CUR)"; exit 0; fi
+TOP=$(printf '%s\n%s\n' "$CUR" "$NEW" | sort -V | tail -n1)
+[ "$TOP" = "$NEW" ] || { log "installiert ist neuer ($CUR), Update $NEW wird ignoriert"; exit 0; }
+
+jq -r '.files[] | .path + " " + .sha256' "$TMP/manifest.json" > "$TMP/list"
+[ -s "$TMP/list" ] || die "Manifest ohne Dateien"
+
+# Alle Dateien laden und prüfen, bevor etwas auf dem Gerät verändert wird
+STAGE="$TMP/stage"
+mkdir -p "$STAGE"
+while read -r p h; do
+  case " $ALLOWED " in *" $p "*) ;; *) die "Pfad nicht erlaubt: $p" ;; esac
+  mkdir -p "$STAGE/$(dirname "$p")"
+  get "$SOURCE/$p" "$STAGE/$p" || die "Download fehlgeschlagen: $p"
+  got=$(sha256sum "$STAGE/$p" | awk '{print $1}')
+  [ "$got" = "$h" ] || die "Prüfsumme falsch bei $p – Update verworfen"
+done < "$TMP/list"
+
+# Aktuelle Version sichern
+mkdir -p "$BAK/$CUR/ui"
+while read -r p h; do
+  if [ -f "$ROOT/$p" ]; then
+    mkdir -p "$BAK/$CUR/$(dirname "$p")"
+    cp -p "$ROOT/$p" "$BAK/$CUR/$p"
+  fi
+done < "$TMP/list"
+[ -f "$ROOT/ui/manifest.json" ] && cp -p "$ROOT/ui/manifest.json" "$BAK/$CUR/ui/manifest.json" || true
+
+# Atomar ersetzen: erst als .new schreiben, dann umbenennen
+while read -r p h; do
+  mkdir -p "$ROOT/$(dirname "$p")"
+  cp "$STAGE/$p" "$ROOT/$p.new" && mv -f "$ROOT/$p.new" "$ROOT/$p"
+done < "$TMP/list"
+mkdir -p "$ROOT/ui"
+cp "$TMP/manifest.json" "$ROOT/ui/manifest.json.new" && mv -f "$ROOT/ui/manifest.json.new" "$ROOT/ui/manifest.json"
+
+# Gegenprobe: stimmen die installierten Dateien mit dem Manifest überein?
+verify_installed() {
+  while read -r p h; do
+    got=$(sha256sum "$ROOT/$p" 2>/dev/null | awk '{print $1}') || return 1
+    [ "$got" = "$h" ] || return 1
+  done < "$TMP/list"
+  return 0
+}
+if ! verify_installed; then
+  log "Gegenprobe fehlgeschlagen – Rückbau"
+  restore_from "$BAK/$CUR"
+  die "Update $NEW zurückgenommen"
+fi
+
+# Nur die letzten $KEEP Sicherungen behalten
+ls -1 "$BAK" | sort -V | awk -v k="$KEEP" '{a[NR]=$0} END{for(i=1;i<=NR-k;i++) print a[i]}' \
+  | while read -r old; do rm -rf "$BAK/$old"; done
+
+log "aktualisiert: $CUR -> $NEW"

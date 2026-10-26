@@ -1,0 +1,36 @@
+# ToyVerse Tab — minimal base + lightweight UI
+# postmarketOS / Alpine, armv7 (Galaxy Tab 2 10.1, samsung-espresso10)
+#
+# These go into pmbootstrap's "extra packages" (pmbootstrap init) OR are
+# installed later with `apk add`. Keep this list lean — this is the anti-bloat
+# core. One package per line; "# ..." are comments.
+
+# --- UI: Sxmo on Sway (made for low-RAM phones/tablets, no GPU accel needed) ---
+postmarketos-ui-sxmo-de-sway   # Sxmo desktop environment, Sway/Wayland edition
+foot                           # fast, tiny Wayland terminal
+cog                            # WPE-WebKit kiosk browser (light; runs the ToyVerse apps)
+# Alternative UI if you prefer a plain tiling desktop instead of Sxmo:
+#   postmarketos-ui-sway       # (then skip the sxmo line above)
+
+# --- Core userland ---
+doas                           # minimal sudo replacement (Alpine default)
+chrony                         # time sync (keeps TLS + crypto timestamps correct)
+e2fsprogs
+dosfstools
+util-linux
+htop
+nano
+less
+tar
+xz
+curl
+ca-certificates
+
+# --- Local web serving for the ToyVerse apps (pick ONE; see toyverse-kiosk.list) ---
+busybox-extras                 # provides httpd (tiny static server)
+
+# --- Nice-to-have, still small ---
+git                            # used by the app auto-updater (git sources)
+jq                             # required by toyverse-app-sync (reads apps.json)
+tmux
+openssl                  # Signaturprüfung für UI-Updates (toyui-update)

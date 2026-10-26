@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ToyMesh · Schaltkreis</title>
+<style>
+  :root { --t: #3ff5e0; --p: #9b5cff; --w: #ffffff; }
+  html, body { margin: 0; height: 100%; background: #060712; overflow: hidden; }
+  .stage { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: system-ui, sans-serif; color: var(--w); }
+  svg.board { width: min(90vw, 560px); height: auto; overflow: visible; }
+  .trace { fill: none; stroke: var(--t); stroke-width: 2.5; stroke-linecap: round; stroke-dasharray: 600; stroke-dashoffset: 600;
+    filter: drop-shadow(0 0 4px rgba(63,245,224,.8)); animation: draw 1.8s ease-out forwards; }
+  .trace.p { stroke: var(--p); filter: drop-shadow(0 0 4px rgba(155,92,255,.9)); animation-delay: .5s; }
+  .trace.w { stroke: var(--w); stroke-width: 1.5; opacity: .6; animation-delay: .9s; }
+  .node { fill: #060712; stroke: var(--t); stroke-width: 2; opacity: 0; animation: light .5s ease forwards; }
+  .node.p { stroke: var(--p); }
+  .n1 { animation-delay: .5s } .n2 { animation-delay: 1s } .n3 { animation-delay: 1.4s } .n4 { animation-delay: 1.8s }
+  .name { margin-top: 24px; font: 800 clamp(30px, 9vw, 58px)/1 system-ui, sans-serif; letter-spacing: .06em; opacity: 0; animation: rise .8s ease 2.2s forwards; }
+  .name span { background: linear-gradient(90deg, var(--t), var(--p)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .sub { margin-top: 10px; font-size: clamp(11px, 3vw, 14px); letter-spacing: .28em; text-transform: uppercase; color: #b8c2d8; opacity: 0; animation: fade .6s ease 2.9s forwards; }
+  .skip { position: fixed; right: 12px; bottom: 10px; color: #8a8fa3; font: 13px system-ui, sans-serif; background: none; border: 0; }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  @keyframes light { to { opacity: 1; fill: rgba(63,245,224,.6); } }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  @keyframes fade { to { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { *, *::after { animation-duration: .01s !important; animation-delay: 0s !important; } }
+</style>
+</head>
+<body>
+<div class="stage">
+  <svg class="board" viewBox="0 0 400 240" aria-hidden="true">
+    <path class="trace" pathLength="600" d="M200 120 H120 V60 H40"/>
+    <path class="trace" pathLength="600" d="M200 120 H280 V40 H360"/>
+    <path class="trace p" pathLength="600" d="M200 120 V190 H140 V220"/>
+    <path class="trace p" pathLength="600" d="M200 120 V180 H300 V210 H360"/>
+    <path class="trace w" pathLength="600" d="M120 60 V20 H60"/>
+    <path class="trace w" pathLength="600" d="M280 40 V10 H340"/>
+    <circle class="node n1" cx="40" cy="60" r="7"/>
+    <circle class="node n2" cx="360" cy="40" r="7"/>
+    <circle class="node n3 p" cx="140" cy="220" r="7"/>
+    <circle class="node n4 p" cx="360" cy="210" r="7"/>
+    <rect x="176" y="96" width="48" height="48" rx="8" fill="#060712" stroke="#3ff5e0" stroke-width="2" opacity="0"
+      style="animation: light .6s ease .25s forwards"/>
+  </svg>
+  <div class="name"><span>ToyMesh</span></div>
+  <div class="sub">Schaltkreis verbunden</div>
+</div>
+<button class="skip" id="skip" type="button">Überspringen</button>
+<script>
+  function done() { try { parent.postMessage("opener-done", "*"); } catch (e) {} }
+  document.getElementById("skip").addEventListener("click", done);
+  document.body.addEventListener("click", done);
+  setTimeout(done, 6000);
+</script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ToyMesh · Plasma</title>
+<style>
+  :root { --t: #3ff5e0; --p: #9b5cff; --w: #ffffff; }
+  html, body { margin: 0; height: 100%; background: #05040c; overflow: hidden; }
+  .stage { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; font-family: system-ui, sans-serif; }
+  .blob { position: absolute; width: 60vmax; height: 60vmax; border-radius: 50%; filter: blur(40px); opacity: .55; }
+  .b1 { background: radial-gradient(circle, var(--t), transparent 65%); left: -20vmax; top: -10vmax; animation: float1 7s ease-in-out infinite alternate; }
+  .b2 { background: radial-gradient(circle, var(--p), transparent 65%); right: -20vmax; bottom: -15vmax; animation: float2 9s ease-in-out infinite alternate; }
+  .b3 { background: radial-gradient(circle, #ffffff, transparent 60%); left: 20vw; top: 25vh; width: 35vmax; height: 35vmax; opacity: .18; animation: float1 11s ease-in-out infinite alternate-reverse; }
+  .wrap { position: relative; text-align: center; animation: breathe 3.2s ease-in-out infinite; }
+  .word { margin: 0; font-size: clamp(46px, 14vw, 120px); font-weight: 800; letter-spacing: .06em; color: var(--w);
+    text-shadow: 0 0 10px var(--t), 0 0 30px var(--p), 0 0 60px var(--t);
+    opacity: 0; animation: fadeIn 1.2s ease .3s forwards; }
+  .line { margin-top: 14px; height: 2px; width: 0; margin-left: auto; margin-right: auto;
+    background: linear-gradient(90deg, transparent, var(--t), var(--p), transparent); animation: grow 1.2s ease 1.2s forwards; }
+  .tag { margin-top: 14px; color: #d8d0f0; font-size: clamp(12px, 3.2vw, 16px); letter-spacing: .3em; text-transform: uppercase; opacity: 0; animation: fadeIn 1s ease 1.9s forwards; }
+  .skip { position: fixed; right: 12px; bottom: 10px; color: #8a8fa3; font: 13px system-ui, sans-serif; background: none; border: 0; }
+  @keyframes float1 { to { transform: translate(18vw, 12vh) scale(1.1); } }
+  @keyframes float2 { to { transform: translate(-16vw, -10vh) scale(.95); } }
+  @keyframes breathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.02); } }
+  @keyframes fadeIn { to { opacity: 1; } }
+  @keyframes grow { to { width: min(70vw, 420px); } }
+  @media (prefers-reduced-motion: reduce) { *, *::after { animation-duration: .01s !important; animation-delay: 0s !important; } }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+  <div class="wrap">
+    <h1 class="word">ToyMesh</h1>
+    <div class="line"></div>
+    <div class="tag">Energie · Fokus · Netz</div>
+  </div>
+</div>
+<button class="skip" id="skip" type="button">Überspringen</button>
+<script>
+  function done() { try { parent.postMessage("opener-done", "*"); } catch (e) {} }
+  document.getElementById("skip").addEventListener("click", done);
+  document.body.addEventListener("click", done);
+  setTimeout(done, 6000);
+</script>
+</body>
+</html>

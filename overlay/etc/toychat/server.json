@@ -1,0 +1,5 @@
+{
+  "_comment": "ToyChat-Relais. iceServers: STUN/TURN für Anrufe über das Internet (leer = nur gleiches Netz). allowedOrigins: Seiten, die die API direkt ansprechen dürfen (Launcher auf 8080).",
+  "iceServers": [],
+  "allowedOrigins": ["http://127.0.0.1:8080", "http://localhost:8080"]
+}

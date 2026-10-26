@@ -1,0 +1,11 @@
+# ToyMesh branding — installed to /etc/os-release by brand-toymesh.sh.
+# Keeps the postmarketOS/Alpine base identifiable (ID_LIKE) so tooling still works.
+NAME="ToyMesh"
+PRETTY_NAME="ToyMesh (postmarketOS)"
+ID=toymesh
+ID_LIKE="postmarketos alpine"
+VERSION="1.0 (Galaxy Tab 2 / espresso10)"
+VERSION_ID="1.0"
+HOME_URL="http://127.0.0.1:8080/"
+BUG_REPORT_URL="http://127.0.0.1:8080/"
+LOGO=toymesh

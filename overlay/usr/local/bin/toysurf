@@ -1,0 +1,83 @@
+#!/bin/sh
+# ToySurf — hardened, customizable browser launcher for ToyMesh.
+# Reads /etc/toysurf/toysurf.conf, picks the best available engine, applies the
+# hardened profile, and launches. Usage: toysurf [URL]
+set -eu
+
+CONF="/etc/toysurf/toysurf.conf"
+SHARE="/etc/toysurf"
+PROFILE="${HOME}/.config/toysurf/profile"
+# defaults (overridden by conf)
+TOYSURF_ENGINE=auto
+TOYSURF_HOME="http://127.0.0.1:8080/toysearch/"
+TOYSURF_EPHEMERAL=0
+TOYSURF_SANDBOX=1
+TOYSURF_TOR=0
+TOYSURF_MODE=window
+# shellcheck disable=SC1090
+[ -f "$CONF" ] && . "$CONF"
+
+URL="${1:-$TOYSURF_HOME}"
+has(){ command -v "$1" >/dev/null 2>&1; }
+
+# --- choose engine ---
+engine=""
+case "$TOYSURF_ENGINE" in
+  full) has firefox-esr && engine=firefox || has firefox && engine=firefox ;;
+  lite) : ;;  # forced lite, picked below
+  auto|*) { has firefox-esr || has firefox; } && engine=firefox ;;
+esac
+if [ -z "$engine" ] || [ "$TOYSURF_ENGINE" = lite ]; then
+  if   has badwolf; then engine=badwolf
+  elif has surf;    then engine=surf
+  elif has cog;     then engine=cog
+  elif has firefox-esr || has firefox; then engine=firefox
+  else echo "ToySurf: no browser engine installed. Run setup-toysurf.sh"; exit 1
+  fi
+fi
+
+# --- optional Tor wrap ---
+TORWRAP=""
+if [ "${TOYSURF_TOR:-0}" = 1 ] && has torsocks; then TORWRAP="torsocks"; fi
+
+# --- optional sandbox ---
+SBX=""
+if [ "${TOYSURF_SANDBOX:-1}" = 1 ]; then
+  if   has firejail; then SBX="firejail --quiet"
+  elif has bwrap;    then SBX="bwrap --unshare-all --share-net --dev /dev --proc /proc --ro-bind / / --bind $HOME $HOME"
+  fi
+fi
+
+echo "ToySurf: engine=$engine sandbox=${SBX:-none} tor=${TORWRAP:-no}"
+
+launch(){ exec $TORWRAP $SBX "$@"; }
+
+case "$engine" in
+  firefox)
+    FF=firefox-esr; has firefox-esr || FF=firefox
+    mkdir -p "$PROFILE"
+    cp -f "$SHARE/user.js" "$PROFILE/user.js" 2>/dev/null || true
+    # ephemeral: throwaway profile that's wiped after exit
+    if [ "${TOYSURF_EPHEMERAL:-0}" = 1 ]; then
+      TMPP="$(mktemp -d)"; cp -f "$SHARE/user.js" "$TMPP/user.js" 2>/dev/null || true
+      trap 'rm -rf "$TMPP"' EXIT
+      PROFILE="$TMPP"
+    fi
+    FLAGS="--profile $PROFILE --no-remote"
+    [ "$TOYSURF_MODE" = kiosk ] && FLAGS="$FLAGS --kiosk"
+    launch "$FF" $FLAGS "$URL"
+    ;;
+  badwolf)
+    # badwolf: privacy-first WebKitGTK, no persistent cookies by default
+    launch badwolf "$URL"
+    ;;
+  surf)
+    # surf: -b no cookies kept across sessions is default behaviour; -D no DNS prefetch
+    launch surf "$URL"
+    ;;
+  cog)
+    EXTRA=""
+    [ "$TOYSURF_MODE" = kiosk ] && EXTRA="--fullscreen"
+    launch cog $EXTRA "$URL"
+    ;;
+esac

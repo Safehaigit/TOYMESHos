@@ -1,0 +1,90 @@
+# ToyVerse Tab — security-research toolkit (open-source, Alpine/pmOS repos)
+#
+# SCOPE / RESPONSIBLE USE
+#   These are standard dual-use security tools (the same ones shipped by Kali,
+#   Parrot and BlackArch). Use them ONLY against systems you own or are
+#   explicitly authorised in writing to test — e.g. your own ToyVerse nodes,
+#   TOYPAY/ToyScan backends, your own Wi-Fi and lab hosts. Unauthorised
+#   scanning, cracking or interception is illegal in most countries (in .DE:
+#   §§202a–202d StGB). This kit does not include and I will not add exploit
+#   payloads, malware, or anything pre-aimed at a third party.
+#
+# HARDWARE REALITY (read HARDWARE.md)
+#   OMAP4430 / 1 GB RAM / armv7 / no usable GPU. So:
+#     - No Metasploit, no OpenVAS/Greenbone (not packaged / far too heavy here).
+#     - hashcat is CPU-only (no OpenCL GPU) => very slow; prefer john for light jobs.
+#     - Internal Wi-Fi almost certainly can't do monitor mode / injection.
+#       Wireless auditing needs an external USB adapter that supports it
+#       (e.g. Atheros AR9271). Without one, skip the [wireless] group.
+#
+# INSTALL
+#   The install script tries each package and skips any the armv7 repos lack,
+#   so a missing tool never breaks the run. Enable community + testing repos
+#   first (scripts/harden.sh does this). Groups are tags for that script.
+
+## [recon] network discovery & analysis — light, all should be available
+nmap
+nmap-scripts
+tcpdump
+netcat-openbsd
+socat
+mtr
+bind-tools            # dig, nslookup, host
+whois
+arp-scan
+ngrep
+hping3
+iperf3
+masscan               # fast port sweeps (may live in testing)
+
+## [traffic] packet capture / inspection
+tshark                # CLI Wireshark (GUI wireshark optional, heavy)
+# wireshark           # uncomment for the GTK GUI (RAM-hungry on 1 GB)
+
+## [web] web-app / API testing (your ToyScan / TOYPAY backends)
+nikto
+sqlmap
+whatweb
+dirb
+gobuster              # go binary, fast dir/dns busting
+ffuf                  # go fuzzer
+wrk                   # HTTP benchmarking / load
+sslscan               # TLS config check
+# wpscan              # ruby, only if you run WordPress
+
+## [osint] passive recon
+dnsrecon
+# theharvester        # python; install via pipx if repo lacks it
+# amass               # go; large binary, optional
+
+## [proxy] interception / routing (MITM your own clients)
+mitmproxy             # python TLS intercept proxy
+proxychains-ng
+tor
+
+## [crypto-pw] password / hash work — CPU only here, keep expectations low
+john                  # John the Ripper (jumbo recommended if available)
+hashcat               # CPU fallback only; slow without GPU
+medusa                # parallel login brute-forcer (authorised targets only)
+hydra                 # thc-hydra (may live in testing)
+crunch                # wordlist generator
+
+## [forensics] firmware / disk / file analysis — great for your own images
+binwalk
+foremost
+sleuthkit
+radare2               # reverse engineering / binary analysis
+
+## [wireless] REQUIRES a monitor-mode-capable USB adapter (see note above)
+aircrack-ng
+iw
+wireless-tools
+hcxtools
+hcxdumptool
+reaver
+
+## [scripting] build your own test tooling
+py3-scapy             # packet crafting in Python
+py3-requests
+py3-cryptography
+python3

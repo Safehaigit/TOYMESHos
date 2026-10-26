@@ -1,0 +1,26 @@
+pmbootstrap init — copy/paste cheat sheet
+=========================================
+
+Run `pmbootstrap init` (scripts/build.sh does this) and answer:
+
+  work path            : <accept default, e.g. ~/.local/var/pmbootstrap>
+  channel              : edge            (newest packages + security fixes)
+  vendor               : samsung
+  device               : espresso10
+  kernel               : mainline if offered, else downstream
+                         (mainline = better long-term security; downstream =
+                          more working hardware. Try mainline first.)
+  username             : toy
+  user interface       : sxmo-de-sway
+                         (alternatives: sway, or "none" for a pure CLI appliance)
+  additional packages  : paste the line below
+  full disk encryption : y
+  hostname             : toyverse-tab
+  timezone/locale      : Europe/Berlin, de_DE.UTF-8
+
+Additional-packages line (base, comma-separated, no comments):
+
+foot,cog,doas,chrony,e2fsprogs,dosfstools,util-linux,htop,nano,less,tar,xz,curl,ca-certificates,busybox-extras,git,tmux
+
+(You can add the hardening + security tools later with scripts/harden.sh, which
+is the recommended path — it skips anything armv7 doesn't have.)

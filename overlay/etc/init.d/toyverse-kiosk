@@ -1,0 +1,29 @@
+#!/sbin/openrc-run
+# APPLIANCE MODE ONLY: boot straight into a fullscreen ToyVerse launcher,
+# no desktop. Uses cage (kiosk Wayland compositor) + cog (WebKit browser).
+#
+# Leave this DISABLED for workstation mode (default). To turn the tablet into
+# a locked appliance:
+#   rc-update del sxmo    2>/dev/null   # stop the desktop from starting
+#   rc-update add toyverse-kiosk default
+#   rc-service toyverse-kiosk start
+#
+# Runs as the unprivileged 'kiosk' user created by install-overlay.sh.
+
+name="toyverse-kiosk"
+description="ToyVerse fullscreen kiosk (cage + cog)"
+
+KIOSK_USER="kiosk"
+URL="http://127.0.0.1:8080/"
+command="/usr/bin/cage"
+command_args="-- cog ${URL}"
+command_user="${KIOSK_USER}"
+command_background="yes"
+pidfile="/run/${name}.pid"
+export XDG_RUNTIME_DIR="/run/user/$(id -u ${KIOSK_USER} 2>/dev/null || echo 1000)"
+export WLR_LIBINPUT_NO_DEVICES=1
+
+depend() {
+    need toyverse-web
+    after udev
+}

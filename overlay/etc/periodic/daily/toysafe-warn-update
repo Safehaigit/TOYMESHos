@@ -1,0 +1,3 @@
+#!/bin/sh
+# Tägliche Aktualisierung der ToySafe-Warnliste (nur wenn WARN_SOURCE gesetzt ist).
+exec /usr/local/bin/toysafe-warn --update

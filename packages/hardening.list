@@ -1,0 +1,33 @@
+# ToyVerse Tab — device hardening packages
+# Defensive tooling for a device that may hold wallet keys / dashboards.
+
+# --- Firewall ---
+nftables                 # modern packet filter (config in overlay/etc/nftables.d)
+
+# --- Disk / key encryption ---
+cryptsetup               # LUKS2 for the data partition (see SECURITY.md)
+# Note: pmbootstrap can enable full-disk encryption at install time (--fde).
+
+# --- Integrity / auth ---
+openssh                  # hardened sshd (config in overlay); disable if unused
+openssh-server-common
+fail2ban                 # ban brute-force sources (reads sshd/httpd logs)
+chrony                   # trustworthy time = valid TLS + crypto signatures
+
+# --- Updates / supply chain ---
+apk-tools                # (already present) used by the auto-update timer
+# apk verifies package signatures by default — keep /etc/apk/keys intact.
+
+# --- Secrets handling for your ToyVerse work ---
+gnupg                    # sign/verify, encrypt local secrets
+pass                     # optional: simple GPG-backed password store
+age                      # modern file encryption (small, great for backups)
+
+# --- Monitoring / audit (lightweight) ---
+logrotate
+audit                    # Linux audit framework (optional; some overhead)
+lynis                    # security auditing — run `lynis audit system`
+
+# --- Network privacy (optional) ---
+tor                      # route traffic over Tor if you want
+proxychains-ng           # force tools through a proxy/Tor

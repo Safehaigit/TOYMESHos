@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
+  <ShortName>ToySearch</ShortName>
+  <Description>ToyMesh privacy search — local ToyVerse content first, then opt-in web search.</Description>
+  <InputEncoding>UTF-8</InputEncoding>
+  <Image width="16" height="16" type="image/x-icon">data:image/x-icon;base64,AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAA/</Image>
+  <Url type="text/html" method="get" template="http://127.0.0.1:8080/toysearch/?q={searchTerms}"/>
+  <moz:SearchForm xmlns:moz="http://www.mozilla.org/2006/browser/search/">http://127.0.0.1:8080/toysearch/</moz:SearchForm>
+</OpenSearchDescription>

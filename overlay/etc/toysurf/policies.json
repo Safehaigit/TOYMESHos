@@ -1,0 +1,80 @@
+{
+  "_comment": "ToySurf (Firefox ESR) enterprise policy. Copied to the browser's distribution/ dir by setup-toysurf.sh. Locks hardening so it can't be weakened by accident.",
+  "policies": {
+    "DisableTelemetry": true,
+    "DisableFirefoxStudies": true,
+    "DisablePocket": true,
+    "DisableFirefoxAccounts": true,
+    "DisableFormHistory": true,
+    "DisableFeedbackCommands": true,
+    "DisableSetDesktopBackground": true,
+    "DisableMasterPasswordCreation": false,
+    "DontCheckDefaultBrowser": true,
+    "NoDefaultBookmarks": true,
+    "OfferToSaveLogins": false,
+    "PasswordManagerEnabled": false,
+    "NetworkPrediction": false,
+    "EnableTrackingProtection": {
+      "Value": true,
+      "Locked": true,
+      "Cryptomining": true,
+      "Fingerprinting": true
+    },
+    "Cookies": {
+      "Behavior": "reject-tracker-and-partition-foreign",
+      "Locked": true
+    },
+    "HttpsOnlyMode": "force_enabled",
+    "DNSOverHTTPS": {
+      "Enabled": true,
+      "ProviderURL": "https://dns.quad9.net/dns-query",
+      "Locked": false
+    },
+    "SanitizeOnShutdown": {
+      "Cache": true,
+      "FormData": true,
+      "History": false,
+      "Sessions": true,
+      "SiteSettings": false,
+      "Locked": false
+    },
+    "ExtensionSettings": {
+      "uBlock0@raymondhill.net": {
+        "installation_mode": "force_installed",
+        "install_url": "https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/latest.xpi"
+      }
+    },
+    "Extensions": {
+      "Install": [
+        "https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/latest.xpi"
+      ]
+    },
+    "Permissions": {
+      "Camera":   { "BlockNewRequests": true },
+      "Microphone": { "BlockNewRequests": true },
+      "Location": { "BlockNewRequests": true },
+      "Notifications": { "BlockNewRequests": true },
+      "Autoplay": { "Default": "block-audio-video" }
+    },
+    "PopupBlocking": { "Default": true },
+    "SearchEngines": {
+      "Default": "ToySearch",
+      "PreventInstalls": false,
+      "Add": [
+        {
+          "Name": "ToySearch",
+          "URLTemplate": "http://127.0.0.1:8080/toysearch/?q={searchTerms}",
+          "Method": "GET",
+          "SuggestURLTemplate": ""
+        }
+      ]
+    },
+    "OverrideFirstRunPage": "http://127.0.0.1:8080/toysearch/",
+    "OverridePostUpdatePage": "",
+    "UserMessaging": {
+      "WhatsNew": false,
+      "ExtensionRecommendations": false,
+      "FeatureRecommendations": false
+    }
+  }
+}

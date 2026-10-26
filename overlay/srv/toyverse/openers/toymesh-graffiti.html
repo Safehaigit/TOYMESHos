@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ToyMesh · Graffiti</title>
+<style>
+  :root { --t: #3ff5e0; --p: #9b5cff; --w: #ffffff; }
+  html, body { margin: 0; height: 100%; background: #07070d; overflow: hidden; }
+  .stage { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .word { display: flex; font: 900 clamp(44px, 14vw, 120px)/1 Impact, "Arial Black", sans-serif; font-style: italic; letter-spacing: -0.02em; }
+  .word span {
+    display: inline-block; position: relative;
+    background: linear-gradient(120deg, var(--t), var(--p) 70%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 0 6px rgba(63,245,224,.7)) drop-shadow(0 0 18px rgba(155,92,255,.6));
+    animation: spray .7s cubic-bezier(.2,.8,.2,1) both;
+  }
+  .word span::after { /* Tropfen unter dem Buchstaben */
+    content: ""; position: absolute; left: 50%; top: 88%; width: 4px; height: 0;
+    background: linear-gradient(var(--p), transparent); border-radius: 0 0 4px 4px;
+    animation: drip 1.4s ease-out forwards; animation-delay: inherit;
+  }
+  .word span:nth-child(odd)::after { height: 0; }
+  .word span:nth-child(1) { animation-delay: .05s } .word span:nth-child(2) { animation-delay: .15s }
+  .word span:nth-child(3) { animation-delay: .25s } .word span:nth-child(4) { animation-delay: .35s }
+  .word span:nth-child(5) { animation-delay: .45s } .word span:nth-child(6) { animation-delay: .55s }
+  .word span:nth-child(7) { animation-delay: .65s }
+  .glow { position: absolute; width: 70vmin; height: 70vmin; border-radius: 50%;
+    background: radial-gradient(circle, rgba(63,245,224,.25), rgba(155,92,255,.12) 45%, transparent 70%);
+    animation: pulse 3s ease-in-out infinite; }
+  .tag { margin-top: 28px; color: var(--w); font: 600 clamp(12px, 3.4vw, 18px)/1.2 system-ui, sans-serif;
+    letter-spacing: .32em; text-transform: uppercase; opacity: 0; animation: fade .8s ease 1.9s forwards; text-shadow: 0 0 10px rgba(255,255,255,.7); }
+  .skip { position: fixed; right: 12px; bottom: 10px; color: #8a8fa3; font: 13px system-ui, sans-serif; background: none; border: 0; }
+  @keyframes spray { 0% { opacity: 0; transform: scale(1.6) skewX(-10deg); filter: blur(10px); } 60% { opacity: 1; filter: blur(0) drop-shadow(0 0 14px rgba(63,245,224,1)); } 100% { transform: none; } }
+  @keyframes drip { from { height: 0; } to { height: 22px; } }
+  @keyframes pulse { 0%, 100% { transform: scale(.95); opacity: .7 } 50% { transform: scale(1.05); opacity: 1 } }
+  @keyframes fade { to { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { *, *::after { animation-duration: .01s !important; animation-delay: 0s !important; } }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="glow"></div>
+  <div class="word" aria-label="ToyMesh">
+    <span>T</span><span>O</span><span>Y</span><span>M</span><span>E</span><span>S</span><span>H</span>
+  </div>
+  <div class="tag">Dein Gerät · Dein Schutz</div>
+</div>
+<button class="skip" id="skip" type="button">Überspringen</button>
+<script>
+  function done() { try { parent.postMessage("opener-done", "*"); } catch (e) {} }
+  document.getElementById("skip").addEventListener("click", done);
+  document.body.addEventListener("click", done);
+  setTimeout(done, 6500);
+</script>
+</body>
+</html>

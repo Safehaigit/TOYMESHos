@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ToySearch</title>
+<link rel="search" type="application/opensearchdescription+xml" title="ToySearch" href="opensearch.xml">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<style>
+:root{--bg:#0D1030;--sf:#181C4A;--ink:#ECEBFA;--mu:#A5AAD6;--ln:#2E3470;--acc:hsl(260 80% 64%);
+ --ser:"Amiri",Georgia,serif;--sn:"Chakra Petch",system-ui,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 1.05rem/1.5 var(--sn);min-height:100vh;
+ display:flex;flex-direction:column;align-items:center;padding:env(safe-area-inset-top,2rem) 1rem 2rem}
+.logo{font:700 clamp(2.2rem,9vw,3.4rem)/1 var(--ser);color:var(--acc);margin:2.2rem 0 .3rem}
+.tag{color:var(--mu);font-size:.9rem;margin-bottom:1.4rem;text-align:center;max-width:34rem}
+form{width:100%;max-width:40rem;display:flex;gap:.5rem}
+input[type=search]{flex:1;font:inherit;padding:.8rem 1rem;border-radius:999px;border:1px solid var(--ln);
+ background:var(--sf);color:var(--ink)}
+input[type=search]:focus{outline:2px solid var(--acc);border-color:var(--acc)}
+button{font:600 1rem var(--sn);cursor:pointer;color:var(--bg);background:var(--acc);border:0;
+ padding:.8rem 1.3rem;border-radius:999px}
+.eng{display:flex;gap:.4rem;flex-wrap:wrap;justify-content:center;margin:1rem 0 0;max-width:40rem}
+.eng button{background:var(--sf);color:var(--ink);border:1px solid var(--ln);padding:.45rem 1rem;font-weight:600;font-size:.85rem}
+.eng button.on{background:var(--acc);color:var(--bg);border-color:transparent}
+.results{width:100%;max-width:40rem;margin:1.6rem 0 0}
+.res{display:block;text-decoration:none;color:var(--ink);background:var(--sf);border:1px solid var(--ln);
+ border-left:4px solid var(--acc);border-radius:.8rem;padding:.8rem 1rem;margin:.5rem 0}
+.res:hover{border-color:var(--acc)}
+.res b{display:block;font:700 1.05rem var(--ser)}
+.res span{color:var(--mu);font-size:.88rem}
+.sec{color:var(--mu);font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;margin:1.2rem 0 .3rem}
+.web{margin:.6rem 0}
+.hint{color:var(--mu);font-size:.82rem;text-align:center;margin-top:1rem;max-width:40rem}
+footer{color:var(--mu);font-size:.78rem;margin-top:auto;padding-top:2rem;text-align:center}
+@media(prefers-color-scheme:light){:root{--bg:#F0F0FA;--sf:#E2E3F5;--ink:#161A44;--mu:#4A4F82;--ln:#BFC3E4;--acc:hsl(260 80% 36%)}}
+</style>
+</head>
+<body>
+<div class="logo">ToySearch</div>
+<div class="tag">Privacy-Suche für ToyMesh — zuerst offline in deinen ToyVerse-Inhalten,
+ dann datensparsam im Web. Keine Tracker, keine Protokolle, kein automatischer externer Aufruf.</div>
+
+<form id="f" role="search">
+  <input id="q" type="search" name="q" autocomplete="off" autofocus
+         placeholder="ToyVerse durchsuchen oder Web-Suche…" aria-label="Suche">
+  <button type="submit">Suchen</button>
+</form>
+
+<div class="eng" id="eng" aria-label="Web-Suchmaschine">
+  <button data-k="ddg" class="on">DuckDuckGo</button>
+  <button data-k="startpage">Startpage</button>
+  <button data-k="brave">Brave</button>
+  <button data-k="wikipedia">Wikipedia</button>
+  <button data-k="local">Nur lokal/SearXNG</button>
+</div>
+
+<div class="results" id="out"></div>
+<div class="hint" id="hint"></div>
+
+<footer>ToySearch · lokal gehostet auf diesem Gerät · Web-Ergebnisse öffnen erst auf deinen Klick.</footer>
+
+<script>
+// Local, offline index of ToyVerse topics (deep-links into the apps). No network.
+var LOCAL=[
+ ["ToySafe Cockpit","Supply- & Wallet-Dashboard, Anti-Scam-Training","../apps/toysafe-cockpit.html","App"],
+ ["TOYPAY","Wallet für ToyCoin, Offline-Zahlung, Händler-Kasse, Authenticator","../apps/toyverse-website.html#toypay","Wallet"],
+ ["TOYQUEST","Spiel im Stil von 1001 Nacht, Maps, Helden, Minigames, NFTs","../apps/toyverse-website.html#toyquest","Spiel"],
+ ["ToyChain","Schlanke Blockchain <256 MB, EVM-kompatibel, Quanten-Hybrid-Signaturen","../apps/toyverse-website.html#toychain","Chain"],
+ ["ToyCash","Euro-gedecktes Bargeld, offline, verschlüsselte Beträge, zk-Notes","../apps/toyverse-website.html#toycash","Geld"],
+ ["ToyScan","Block-Explorer, Live-Supply-Prüfung, Ampel bei Verstoß","../apps/toyverse-website.html#toyscan","Explorer"],
+ ["ToyCoin","Token auf Polygon & Ethereum, 100.000.000 je Chain, kein Nachprägen","../apps/toyverse-website.html#toycoin","Token"],
+ ["Wallet verbinden","Guthaben auf Polygon lesen (nur lesend)","../apps/toyverse-website.html#wallet","Wallet"],
+ ["Mint-Simulation","Geräte ins Netz schicken, Blöcke entstehen sehen","../apps/toyverse-website.html#mint","Demo"],
+ ["Bridge","1:1 über Chains, Obergrenze 100 Mio., sicherste Bauart","../apps/toyverse-website.html#bridge","Chain"],
+ ["Roadmap","Wallet → Spiel → ToyChain → Online → ToyCash","../apps/toyverse-website.html#roadmap","Plan"],
+ ["Community","Händler, Mentoren, Community-Knoten, 28 Sprachen","../apps/toyverse-website.html#community","Netz"],
+ ["Start / Launcher","Alle Apps auf einen Blick","../index.html","ToyMesh"]
+];
+var WEB={
+ ddg:"https://duckduckgo.com/html/?q=",
+ startpage:"https://www.startpage.com/sp/search?query=",
+ brave:"https://search.brave.com/search?q=",
+ wikipedia:"https://de.wikipedia.org/w/index.php?search=",
+ // local: self-hosted ToySearch/SearXNG — set the port your SearXNG runs on
+ local:"http://127.0.0.1:8888/search?q="
+};
+function qp(n){return new URLSearchParams(location.search).get(n)||"";}
+function pick(){try{return localStorage.getItem("toysearch.engine")||"ddg";}catch(e){return "ddg";}}
+function setPick(k){try{localStorage.setItem("toysearch.engine",k);}catch(e){}}
+var engine=pick();
+// reflect saved engine in buttons
+Array.prototype.forEach.call(document.querySelectorAll("#eng button"),function(b){
+  b.classList.toggle("on",b.dataset.k===engine);
+  b.onclick=function(){engine=b.dataset.k;setPick(engine);
+    document.querySelectorAll("#eng button").forEach(function(x){x.classList.toggle("on",x===b);});
+    if(document.getElementById("q").value)run(document.getElementById("q").value);};
+});
+function esc(s){var d=document.createElement("div");d.textContent=s;return d.innerHTML;}
+function localHits(query){
+  var t=query.toLowerCase();
+  return LOCAL.filter(function(r){return (r[0]+" "+r[1]+" "+r[3]).toLowerCase().indexOf(t)>-1;});
+}
+function run(query){
+  var out=document.getElementById("out"),hint=document.getElementById("hint");
+  out.innerHTML="";hint.innerHTML="";
+  if(!query){return;}
+  var hits=localHits(query);
+  if(hits.length){
+    out.innerHTML+='<div class="sec">Lokal · ToyVerse ('+hits.length+')</div>';
+    hits.forEach(function(r){
+      out.innerHTML+='<a class="res" href="'+esc(r[2])+'"><b>'+esc(r[0])+'</b><span>'+esc(r[1])+' · '+esc(r[3])+'</span></a>';
+    });
+  }else{
+    out.innerHTML+='<div class="sec">Lokal · ToyVerse</div><p style="color:var(--mu)">Keine lokalen Treffer.</p>';
+  }
+  var url=WEB[engine]+encodeURIComponent(query);
+  out.innerHTML+='<div class="sec">Web</div>'
+    +'<a class="res web" href="'+esc(url)+'" rel="noreferrer noopener"><b>Im Web suchen: “'+esc(query)+'”</b>'
+    +'<span>über '+esc(engine)+' · öffnet erst auf Klick (datensparsam)</span></a>';
+  if(engine==="local"){hint.textContent="Lokal-Modus: erwartet ein self-hosted SearXNG auf Port 8888 (siehe TOYSURF.md).";}
+}
+document.getElementById("f").addEventListener("submit",function(e){
+  e.preventDefault();var v=document.getElementById("q").value.trim();
+  history.replaceState(null,"","?q="+encodeURIComponent(v));run(v);
+});
+// if arrived with ?q= (e.g. from the browser's address bar via ToySearch engine)
+var pre=qp("q");
+if(pre){document.getElementById("q").value=pre;run(pre);}
+</script>
+</body>
+</html>
