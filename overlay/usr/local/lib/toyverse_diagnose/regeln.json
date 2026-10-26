@@ -36,7 +36,8 @@
     "**/*.webp",
     "**/*.woff2",
     "**/*.ttf",
-    "**/*.pdf"
+    "**/*.pdf",
+    "**/toyverse-diagnose/tests/**"
   ],
   "produkte": {
     "ToyChain": "ToyChain",
@@ -82,7 +83,9 @@
       ],
       "ohne": [
         "**/verlauf.json",
-        "**/regeln.json"
+        "**/regeln.json",
+        "**/toyverse-diagnose/tests/**",
+        "docs/02-entscheidungen.md"
       ],
       "korrektur": {
         "ersetze": {
@@ -94,7 +97,8 @@
           "Safehaigit/ToySafe": "TOYfoundation/ToySafe",
           "Safehaigit/toysafe": "TOYfoundation/ToySafe"
         }
-      }
+      },
+      "_hinweis": "Das Entscheidungsprotokoll bleibt wörtlich (historischer Stand). Die Tests des Werkzeugs enthalten die alten Namen absichtlich."
     },
     {
       "id": "E02",
