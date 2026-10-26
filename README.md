@@ -104,3 +104,7 @@ own or are authorised to test — see the responsible-use section in `SECURITY.m
 Teamchat mit Kanälen, Aufgaben und Videoanrufen. Nachrichten sind Ende-zu-Ende verschlüsselt und
 signiert. Der Server (`overlay/usr/local/lib/toychat/server.js`) sieht nur Chiffrat. Details,
 Sicherheitsmodell und Grenzen in **TOYCHAT.md**.
+
+## Lizenz
+
+MIT, siehe `LICENSE`. Gilt für die Skripte, Konfigurationen und Apps in diesem Repository. postmarketOS, Alpine und alle Pakete aus `packages/` behalten ihre eigenen Lizenzen.
