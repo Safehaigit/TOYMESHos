@@ -5,16 +5,21 @@ a chat sandbox). Budget ~10–20 GB disk and 1–2 hours the first time.
 
 ## 0. Back up & prerequisites
 - **Back up the tablet** — everything gets wiped.
-- On the PC: `python3`, `git`, and `heimdall` (for flashing Samsung devices).
-  Debian/Ubuntu: `sudo apt install python3 git heimdall-flash`
+- On the PC: `python3`, `git`, `heimdall` (for flashing Samsung devices) and
+  Node.js 22.12 or newer (to build the ToyVerse website).
+  Debian/Ubuntu: `sudo apt install python3 git heimdall-flash`, Node.js from nodejs.org
 - Know your recovery combo: **Power + Volume-Down** to enter download/Odin mode;
   **Power + Volume-Up** for recovery.
 
 ## 1. Build
 ```sh
 cd toyverse-tab
+bash scripts/fetch-website.sh   # builds the ToyVerse website into overlay/srv/toyverse/web
 sh scripts/build.sh
 ```
+`fetch-website.sh` clones `TOYfoundation/ToyVerse-web`, builds it for the path
+`/web/` and checks every internal link. Pass a local checkout instead if you have one:
+`bash scripts/fetch-website.sh ../ToyVerse-web`.
 This clones `pmbootstrap`, runs `pmbootstrap init` (use `pmbootstrap-init.txt`
 to answer), then `install --fde` and `export`. At the end it prints the export
 directory containing:
@@ -57,7 +62,14 @@ doas sh scripts/harden.sh            # firewall, tools, sysctl, auto-updates
 
 ## Updating apps later
 Drop a new `.html` into `/srv/toyverse/apps/` (same name) — no rebuild, no
-reflash. Add a tile by editing `/srv/toyverse/index.html`.
+reflash. Add an app by adding an entry to `/srv/toyverse/apps.json`.
+
+**Website:** `toyweb-update` replaces `/srv/toyverse/web` once a day from a signed
+release, with the same keys and threshold as the UI updates (at least 2 signers).
+On the PC: `bash scripts/fetch-website.sh`, then
+`sh scripts/sign-web-release.sh ~/toyweb-release ~/toymesh-keys/signer-a.pem ~/toymesh-keys/signer-b.pem`,
+put the folder on an HTTPS server and set `SOURCE=` in `/etc/toymesh/web-update.conf`.
+Undo: `doas toyweb-update --rollback`.
 
 ## If a step fails
 - Black screen after Samsung logo → wrong kernel variant; rebuild choosing the

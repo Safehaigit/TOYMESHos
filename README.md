@@ -23,7 +23,8 @@ GPU driver, armv7).
 ## What you get
 - **Minimal base + light UI** (Sxmo on Sway) — `packages/base.list`, `DEBLOAT.md`
 - **Your apps**, served locally and offline — `overlay/srv/toyverse/`
-  (launcher + `toysafe-cockpit.html` + `toyverse-website.html`)
+  (launcher + `toysafe-cockpit.html` + the ToyVerse website in `web/`, built from
+  `TOYfoundation/ToyVerse-web` by `scripts/fetch-website.sh`)
 - **Hardening** — LUKS FDE, nftables default-deny, sysctl, ssh key-only,
   fail2ban, signed auto-updates, chrony — `packages/hardening.list`, `SECURITY.md`
 - **Security-research toolkit** — recon, traffic, web, forensics, proxy, crypto,
@@ -33,6 +34,7 @@ GPU driver, armv7).
 ```sh
 # on a Linux PC:
 sh scripts/fetch-fonts.sh    # bundle web fonts for offline use (optional)
+bash scripts/fetch-website.sh  # build the ToyVerse website into overlay/srv/toyverse/web
 sh scripts/build.sh          # build with pmbootstrap (see pmbootstrap-init.txt)
 # flash per BUILD.md (heimdall to internal, or dd to microSD for safe dual-boot)
 
